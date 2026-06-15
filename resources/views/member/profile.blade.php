@@ -108,6 +108,51 @@
         </div>
     @endif
 
+    {{-- Change Password --}}
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+        <h2 class="font-semibold text-gray-800 mb-4">Change Password</h2>
+
+        @if(session('status') === 'password-updated')
+            <div class="mb-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm">
+                Password updated successfully.
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('password.update') }}" class="space-y-4 max-w-md">
+            @csrf
+            @method('PUT')
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                <input type="password" name="current_password" autocomplete="current-password" required
+                       class="w-full border {{ $errors->updatePassword->has('current_password') ? 'border-red-400' : 'border-gray-300' }} rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                @if($errors->updatePassword->has('current_password'))
+                    <p class="text-red-500 text-xs mt-1">{{ $errors->updatePassword->first('current_password') }}</p>
+                @endif
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                <input type="password" name="password" autocomplete="new-password" required
+                       class="w-full border {{ $errors->updatePassword->has('password') ? 'border-red-400' : 'border-gray-300' }} rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                @if($errors->updatePassword->has('password'))
+                    <p class="text-red-500 text-xs mt-1">{{ $errors->updatePassword->first('password') }}</p>
+                @endif
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                <input type="password" name="password_confirmation" autocomplete="new-password" required
+                       class="w-full border {{ $errors->updatePassword->has('password_confirmation') ? 'border-red-400' : 'border-gray-300' }} rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none">
+            </div>
+
+            <button type="submit"
+                    class="bg-green-700 hover:bg-green-800 text-white px-8 py-2 rounded-lg text-sm font-medium transition-colors">
+                Update Password
+            </button>
+        </form>
+    </div>
+
 </div>
 
 </x-layouts.member>

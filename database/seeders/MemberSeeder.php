@@ -255,7 +255,7 @@ class MemberSeeder extends Seeder
             ],
             [
                 'full_name'         => 'Md. Jubaer Hossain',
-                'shares'            => 2,
+                'shares'            => 1,
                 'email'             => 'jubaerkuet@gmail.com',
                 'permanent_address' => 'Doar par, Magura',
                 'present_address'   => '16/1/1 Tolarbagh, Mirpur 1, Dhaka 1216',
