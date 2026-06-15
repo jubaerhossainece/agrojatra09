@@ -43,4 +43,9 @@ class Deposit extends Model
     {
         return $this->belongsTo(User::class, 'recorded_by');
     }
+
+    public function allocations()
+    {
+        return $this->hasMany(DepositAllocation::class);
+    }
 }

@@ -3,11 +3,13 @@
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
 use App\Http\Controllers\Admin\DepositController as AdminDeposit;
 use App\Http\Controllers\Admin\MemberController as AdminMember;
+use App\Http\Controllers\Admin\MonthlyPaymentController as AdminMonthlyPayment;
 use App\Http\Controllers\Admin\OpinionController as AdminOpinion;
 use App\Http\Controllers\Admin\ReportController as AdminReport;
 use App\Http\Controllers\Admin\UserController as AdminUser;
 use App\Http\Controllers\Member\DashboardController as MemberDashboard;
 use App\Http\Controllers\Member\DepositController as MemberDeposit;
+use App\Http\Controllers\Member\PaymentScheduleController as MemberPaymentSchedule;
 use App\Http\Controllers\Member\ProfileController as MemberProfile;
 use Illuminate\Support\Facades\Route;
 
@@ -26,6 +28,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/opinions', [AdminOpinion::class, 'index'])->name('opinions.index');
     Route::get('/users', [AdminUser::class, 'index'])->name('users.index');
     Route::put('/users/{user}', [AdminUser::class, 'update'])->name('users.update');
+    // Monthly payments
+    Route::get('/monthly-payments', [AdminMonthlyPayment::class, 'index'])->name('monthly-payments.index');
+    Route::get('/monthly-payments/{year}/{month}', [AdminMonthlyPayment::class, 'show'])->name('monthly-payments.show');
+    Route::post('/monthly-payments/generate', [AdminMonthlyPayment::class, 'generate'])->name('monthly-payments.generate');
 });
 
 // Member routes
@@ -34,6 +40,7 @@ Route::prefix('member')->name('member.')->middleware(['auth', 'member'])->group(
     Route::get('/profile', [MemberProfile::class, 'show'])->name('profile');
     Route::resource('deposits', MemberDeposit::class)->except(['show']);
     Route::post('/deposits/toggle-permission', [MemberDeposit::class, 'togglePermission'])->name('deposits.toggle-permission');
+    Route::get('/payment-schedule', [MemberPaymentSchedule::class, 'index'])->name('payment-schedule');
 });
 
 // Redirect /dashboard to role-based dashboard

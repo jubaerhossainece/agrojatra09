@@ -36,6 +36,11 @@
                           {{ request()->routeIs('member.deposits*') ? 'bg-green-700 text-white' : 'text-green-100 hover:bg-green-700' }}">
                     Deposits
                 </a>
+                <a href="{{ route('member.payment-schedule') }}"
+                   class="text-sm px-3 py-2 rounded-lg transition-colors
+                          {{ request()->routeIs('member.payment-schedule') ? 'bg-green-700 text-white' : 'text-green-100 hover:bg-green-700' }}">
+                    Payments
+                </a>
 
                 <div class="flex items-center gap-3 pl-3 border-l border-green-700">
                     <div class="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center text-sm font-bold">

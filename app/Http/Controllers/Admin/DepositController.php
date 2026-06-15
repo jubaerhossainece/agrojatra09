@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreDepositRequest;
 use App\Models\Deposit;
 use App\Models\Member;
+use App\Services\MonthlyPaymentService;
 use Illuminate\Http\Request;
-
 
 class DepositController extends Controller
 {
+    public function __construct(private MonthlyPaymentService $paymentService) {}
+
     public function index(Request $request)
     {
         $query = Deposit::with(['member', 'recorder'])->latest();
@@ -33,7 +35,6 @@ class DepositController extends Controller
 
     public function create(Request $request)
     {
-        // Only show members who have granted permission
         $members = Member::with('shares')
             ->where('admin_deposit_permission', true)
             ->orderBy('full_name')
@@ -43,7 +44,6 @@ class DepositController extends Controller
             ? Member::with('shares')->find($request->member_id)
             : null;
 
-        // If a specific member was requested but hasn't granted permission, warn admin
         if ($selectedMember && !$selectedMember->allowsAdminDeposit()) {
             return redirect()->route('admin.deposits.create')
                 ->with('error', "{$selectedMember->full_name} has not granted permission for admin deposits.");
@@ -62,8 +62,9 @@ class DepositController extends Controller
         }
 
         $data['recorded_by'] = auth()->id();
-        Deposit::create($data);
+        $deposit = Deposit::create($data);
 
+        $this->paymentService->allocateDeposit($deposit);
         $this->syncShareStatus($member);
 
         return redirect()->route('admin.deposits.index')
@@ -78,7 +79,10 @@ class DepositController extends Controller
 
     public function destroy(Deposit $deposit)
     {
+        $member = $deposit->member;
         $deposit->delete();
+        $this->paymentService->reallocateAll($member);
+        $this->syncShareStatus($member);
 
         return redirect()->route('admin.deposits.index')
             ->with('success', 'Deposit deleted.');

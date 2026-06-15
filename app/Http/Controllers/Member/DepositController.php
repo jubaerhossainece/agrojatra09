@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Member;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\Member;
+use App\Services\MonthlyPaymentService;
 use Illuminate\Http\Request;
 
 class DepositController extends Controller
 {
+    public function __construct(private MonthlyPaymentService $paymentService) {}
+
     private function member(): Member
     {
         return Member::with(['shares', 'deposits'])->findOrFail(auth()->user()->member_id);
@@ -16,7 +19,7 @@ class DepositController extends Controller
 
     public function index()
     {
-        $member = $this->member();
+        $member   = $this->member();
         $deposits = $member->deposits()->latest()->get();
 
         return view('member.deposits.index', compact('member', 'deposits'));
@@ -39,10 +42,10 @@ class DepositController extends Controller
             'note'           => ['nullable', 'string'],
         ]);
 
-        $member = $this->member();
-        $share  = $member->shares()->latest()->first();
+        $member  = $this->member();
+        $share   = $member->shares()->latest()->first();
 
-        Deposit::create([
+        $deposit = Deposit::create([
             'member_id'      => $member->id,
             'share_id'       => $share?->id,
             'amount'         => $request->amount,
@@ -54,6 +57,7 @@ class DepositController extends Controller
             'recorded_by'    => auth()->id(),
         ]);
 
+        $this->paymentService->allocateDeposit($deposit);
         $this->syncShareStatus($member);
 
         return redirect()->route('member.deposits.index')
@@ -90,7 +94,9 @@ class DepositController extends Controller
             'note'           => $request->note,
         ]);
 
-        $this->syncShareStatus($this->member());
+        $member = $this->member();
+        $this->paymentService->reallocateAll($member);
+        $this->syncShareStatus($member);
 
         return redirect()->route('member.deposits.index')
             ->with('success', 'Deposit updated successfully.');
@@ -99,8 +105,10 @@ class DepositController extends Controller
     public function destroy(Deposit $deposit)
     {
         $this->authorizeDeposit($deposit);
+        $member = $this->member();
         $deposit->delete();
-        $this->syncShareStatus($this->member());
+        $this->paymentService->reallocateAll($member);
+        $this->syncShareStatus($member);
 
         return redirect()->route('member.deposits.index')
             ->with('success', 'Deposit deleted.');

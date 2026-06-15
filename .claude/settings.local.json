@@ -3,7 +3,8 @@
     "allow": [
       "Bash(php --version)",
       "Bash(composer --version)",
-      "Bash(npm --version)"
+      "Bash(npm --version)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(k,v\\) for k,v in {**d.get\\('devDependencies',{}\\),**d.get\\('dependencies',{}\\)}.items\\(\\)]\")"
     ]
   }
 }

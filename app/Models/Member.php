@@ -61,6 +61,11 @@ class Member extends Model
         return $this->hasOne(GroupOpinion::class);
     }
 
+    public function monthlyPayments()
+    {
+        return $this->hasMany(MonthlyPayment::class);
+    }
+
     public function getLatestShareAttribute()
     {
         return $this->shares()->latest()->first();
