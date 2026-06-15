@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ReportController as AdminReport;
 use App\Http\Controllers\Admin\UserController as AdminUser;
 use App\Http\Controllers\Member\DashboardController as MemberDashboard;
 use App\Http\Controllers\Member\DepositController as MemberDeposit;
+use App\Http\Controllers\Member\MembersController as MemberMembers;
 use App\Http\Controllers\Member\PaymentScheduleController as MemberPaymentSchedule;
 use App\Http\Controllers\Member\ProfileController as MemberProfile;
 use Illuminate\Support\Facades\Route;
@@ -41,6 +42,8 @@ Route::prefix('member')->name('member.')->middleware(['auth', 'member'])->group(
     Route::resource('deposits', MemberDeposit::class)->except(['show']);
     Route::post('/deposits/toggle-permission', [MemberDeposit::class, 'togglePermission'])->name('deposits.toggle-permission');
     Route::get('/payment-schedule', [MemberPaymentSchedule::class, 'index'])->name('payment-schedule');
+    Route::get('/members', [MemberMembers::class, 'index'])->name('members.index');
+    Route::get('/members/{member}', [MemberMembers::class, 'show'])->name('members.show');
 });
 
 // Redirect /dashboard to role-based dashboard

@@ -77,6 +77,7 @@
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">Bank</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Reference</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Receipt</th>
+                        <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell"></th>
                         <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Actions</th>
                     </tr>
                 </thead>
@@ -88,6 +89,16 @@
                             <td class="px-4 py-3 text-gray-500 hidden sm:table-cell">{{ $deposit->bank_name ?? '—' }}</td>
                             <td class="px-4 py-3 text-gray-500 hidden md:table-cell">{{ $deposit->bank_reference ?? '—' }}</td>
                             <td class="px-4 py-3 text-gray-500 hidden md:table-cell">{{ $deposit->receipt_number ?? '—' }}</td>
+                            <td class="px-4 py-3 hidden md:table-cell">
+                                @if($deposit->attachment)
+                                    <a href="{{ $deposit->attachmentUrl() }}" target="_blank"
+                                       title="View attachment" class="text-blue-500 hover:text-blue-700">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                        </svg>
+                                    </a>
+                                @endif
+                            </td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     <a href="{{ route('member.deposits.edit', $deposit) }}"
@@ -111,7 +122,7 @@
                     <tr>
                         <td class="px-4 py-2 text-xs font-semibold text-gray-600">Total</td>
                         <td class="px-4 py-2 text-right font-bold text-green-700">৳ {{ number_format($deposits->sum('amount')) }}</td>
-                        <td colspan="4" class="hidden md:table-cell"></td>
+                        <td colspan="5" class="hidden md:table-cell"></td>
                     </tr>
                 </tfoot>
             </table>

@@ -8,6 +8,7 @@ use App\Models\Deposit;
 use App\Models\Member;
 use App\Services\MonthlyPaymentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class DepositController extends Controller
 {
@@ -62,6 +63,12 @@ class DepositController extends Controller
         }
 
         $data['recorded_by'] = auth()->id();
+
+        if ($request->hasFile('attachment')) {
+            $data['attachment'] = $request->file('attachment')
+                ->store("deposits/{$member->id}", 'public');
+        }
+
         $deposit = Deposit::create($data);
 
         $this->paymentService->allocateDeposit($deposit);
@@ -80,6 +87,11 @@ class DepositController extends Controller
     public function destroy(Deposit $deposit)
     {
         $member = $deposit->member;
+
+        if ($deposit->attachment) {
+            Storage::disk('public')->delete($deposit->attachment);
+        }
+
         $deposit->delete();
         $this->paymentService->reallocateAll($member);
         $this->syncShareStatus($member);

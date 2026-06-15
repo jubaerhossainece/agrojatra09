@@ -4,7 +4,7 @@
 
     <a href="{{ route('member.deposits.index') }}" class="text-sm text-gray-500 hover:text-gray-700">← Back to Deposits</a>
 
-    <form method="POST" action="{{ route('member.deposits.update', $deposit) }}">
+    <form method="POST" action="{{ route('member.deposits.update', $deposit) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
@@ -49,6 +49,35 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Note</label>
                 <textarea name="note" rows="2"
                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none">{{ old('note', $deposit->note) }}</textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Attachment</label>
+                @if($deposit->attachment)
+                    <div class="mb-2 p-3 bg-gray-50 rounded-lg border border-gray-200 flex items-center gap-3">
+                        @if($deposit->attachmentIsImage())
+                            <img src="{{ $deposit->attachmentUrl() }}" alt="Attachment"
+                                 class="h-16 w-16 object-cover rounded border border-gray-200">
+                        @else
+                            <svg class="w-10 h-10 text-red-400 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
+                            </svg>
+                        @endif
+                        <div class="flex-1 min-w-0">
+                            <a href="{{ $deposit->attachmentUrl() }}" target="_blank"
+                               class="text-sm text-blue-600 hover:underline truncate block">View current attachment</a>
+                            <label class="flex items-center gap-2 mt-1 cursor-pointer">
+                                <input type="checkbox" name="remove_attachment" value="1"
+                                       class="rounded border-gray-300 text-red-600 focus:ring-red-500">
+                                <span class="text-xs text-red-600">Remove this attachment</span>
+                            </label>
+                        </div>
+                    </div>
+                @endif
+                <p class="text-xs text-gray-400 mb-1">Replace with new file — JPG, PNG, PDF · max 5 MB</p>
+                <input type="file" name="attachment" accept=".jpg,.jpeg,.png,.pdf"
+                       class="w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100 cursor-pointer">
+                @error('attachment')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
         </div>
 

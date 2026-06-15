@@ -7,6 +7,7 @@ use App\Models\Deposit;
 use App\Models\Member;
 use App\Services\MonthlyPaymentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class DepositController extends Controller
 {
@@ -40,10 +41,15 @@ class DepositController extends Controller
             'bank_reference' => ['nullable', 'string', 'max:255'],
             'receipt_number' => ['nullable', 'string', 'max:255'],
             'note'           => ['nullable', 'string'],
+            'attachment'     => ['nullable', 'file', 'mimes:jpeg,jpg,png,pdf', 'max:5120'],
         ]);
 
         $member  = $this->member();
         $share   = $member->shares()->latest()->first();
+
+        $attachment = $request->hasFile('attachment')
+            ? $request->file('attachment')->store("deposits/{$member->id}", 'public')
+            : null;
 
         $deposit = Deposit::create([
             'member_id'      => $member->id,
@@ -54,6 +60,7 @@ class DepositController extends Controller
             'bank_reference' => $request->bank_reference,
             'receipt_number' => $request->receipt_number,
             'note'           => $request->note,
+            'attachment'     => $attachment,
             'recorded_by'    => auth()->id(),
         ]);
 
@@ -77,22 +84,38 @@ class DepositController extends Controller
         $this->authorizeDeposit($deposit);
 
         $request->validate([
-            'amount'         => ['required', 'numeric', 'min:1'],
-            'deposit_date'   => ['required', 'date'],
-            'bank_name'      => ['nullable', 'string', 'max:255'],
-            'bank_reference' => ['nullable', 'string', 'max:255'],
-            'receipt_number' => ['nullable', 'string', 'max:255'],
-            'note'           => ['nullable', 'string'],
+            'amount'          => ['required', 'numeric', 'min:1'],
+            'deposit_date'    => ['required', 'date'],
+            'bank_name'       => ['nullable', 'string', 'max:255'],
+            'bank_reference'  => ['nullable', 'string', 'max:255'],
+            'receipt_number'  => ['nullable', 'string', 'max:255'],
+            'note'            => ['nullable', 'string'],
+            'attachment'      => ['nullable', 'file', 'mimes:jpeg,jpg,png,pdf', 'max:5120'],
+            'remove_attachment' => ['nullable', 'boolean'],
         ]);
 
-        $deposit->update([
+        $updateData = [
             'amount'         => $request->amount,
             'deposit_date'   => $request->deposit_date,
             'bank_name'      => $request->bank_name,
             'bank_reference' => $request->bank_reference,
             'receipt_number' => $request->receipt_number,
             'note'           => $request->note,
-        ]);
+        ];
+
+        if ($request->hasFile('attachment')) {
+            if ($deposit->attachment) {
+                Storage::disk('public')->delete($deposit->attachment);
+            }
+            $member = $this->member();
+            $updateData['attachment'] = $request->file('attachment')
+                ->store("deposits/{$member->id}", 'public');
+        } elseif ($request->boolean('remove_attachment') && $deposit->attachment) {
+            Storage::disk('public')->delete($deposit->attachment);
+            $updateData['attachment'] = null;
+        }
+
+        $deposit->update($updateData);
 
         $member = $this->member();
         $this->paymentService->reallocateAll($member);
@@ -106,6 +129,11 @@ class DepositController extends Controller
     {
         $this->authorizeDeposit($deposit);
         $member = $this->member();
+
+        if ($deposit->attachment) {
+            Storage::disk('public')->delete($deposit->attachment);
+        }
+
         $deposit->delete();
         $this->paymentService->reallocateAll($member);
         $this->syncShareStatus($member);

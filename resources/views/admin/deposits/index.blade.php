@@ -47,6 +47,7 @@
                     <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">Date</th>
                     <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Bank</th>
                     <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden lg:table-cell">Reference</th>
+                    <th class="px-4 py-3 hidden lg:table-cell"></th>
                     <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Actions</th>
                 </tr>
             </thead>
@@ -67,15 +68,31 @@
                         </td>
                         <td class="px-4 py-3 text-gray-600 hidden md:table-cell">{{ $deposit->bank_name ?? '—' }}</td>
                         <td class="px-4 py-3 text-gray-600 hidden lg:table-cell">{{ $deposit->bank_reference ?? '—' }}</td>
+                        <td class="px-4 py-3 hidden lg:table-cell">
+                            @if($deposit->attachment)
+                                <a href="{{ $deposit->attachmentUrl() }}" target="_blank"
+                                   title="View attachment" class="text-blue-500 hover:text-blue-700">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                    </svg>
+                                </a>
+                            @endif
+                        </td>
                         <td class="px-4 py-3 text-right">
-                            <form method="POST" action="{{ route('admin.deposits.destroy', $deposit) }}"
-                                  onsubmit="return confirm('Delete this deposit?')">
-                                @csrf @method('DELETE')
-                                <button type="submit"
-                                        class="text-red-600 hover:text-red-800 font-medium text-xs px-2 py-1 rounded hover:bg-red-50 transition-colors">
-                                    Delete
-                                </button>
-                            </form>
+                            <div class="flex items-center justify-end gap-2">
+                                <a href="{{ route('admin.deposits.show', $deposit) }}"
+                                   class="text-blue-600 hover:text-blue-800 font-medium text-xs px-2 py-1 rounded hover:bg-blue-50 transition-colors">
+                                    View
+                                </a>
+                                <form method="POST" action="{{ route('admin.deposits.destroy', $deposit) }}"
+                                      onsubmit="return confirm('Delete this deposit?')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit"
+                                            class="text-red-600 hover:text-red-800 font-medium text-xs px-2 py-1 rounded hover:bg-red-50 transition-colors">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 @empty

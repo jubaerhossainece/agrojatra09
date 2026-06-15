@@ -22,6 +22,7 @@ class StoreDepositRequest extends FormRequest
             'bank_reference' => ['nullable', 'string', 'max:255'],
             'receipt_number' => ['nullable', 'string', 'max:255'],
             'note'           => ['nullable', 'string'],
+            'attachment'     => ['nullable', 'file', 'mimes:jpeg,jpg,png,pdf', 'max:5120'],
         ];
     }
 }

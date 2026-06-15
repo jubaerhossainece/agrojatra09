@@ -44,6 +44,9 @@ class MonthlyPaymentService
                     'is_late'         => false,
                 ]);
                 $created++;
+
+                // Replay all deposits so any prepaid surplus cascades into this new month.
+                $this->reallocateAll($member);
             }
         }
 

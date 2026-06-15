@@ -24,7 +24,7 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('member.deposits.store') }}">
+    <form method="POST" action="{{ route('member.deposits.store') }}" enctype="multipart/form-data">
         @csrf
 
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
@@ -71,6 +71,14 @@
                 <textarea name="note" rows="2"
                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none"
                           placeholder="Optional note about this payment...">{{ old('note') }}</textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Attachment</label>
+                <p class="text-xs text-gray-400 mb-1">Screenshot or transaction PDF — JPG, PNG, PDF · max 5 MB</p>
+                <input type="file" name="attachment" accept=".jpg,.jpeg,.png,.pdf"
+                       class="w-full text-sm text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100 cursor-pointer">
+                @error('attachment')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
         </div>
 

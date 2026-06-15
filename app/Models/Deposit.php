@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Deposit extends Model
 {
@@ -18,8 +19,19 @@ class Deposit extends Model
         'bank_reference',
         'receipt_number',
         'note',
+        'attachment',
         'recorded_by',
     ];
+
+    public function attachmentUrl(): ?string
+    {
+        return $this->attachment ? Storage::url($this->attachment) : null;
+    }
+
+    public function attachmentIsImage(): bool
+    {
+        return $this->attachment && preg_match('/\.(jpg|jpeg|png)$/i', $this->attachment);
+    }
 
     protected function casts(): array
     {
