@@ -51,7 +51,7 @@ class DepositController extends Controller
             ? $request->file('attachment')->store("deposits/{$member->id}", 'public')
             : null;
 
-        $deposit = Deposit::create([
+        Deposit::create([
             'member_id'      => $member->id,
             'share_id'       => $share?->id,
             'amount'         => $request->amount,
@@ -62,18 +62,18 @@ class DepositController extends Controller
             'note'           => $request->note,
             'attachment'     => $attachment,
             'recorded_by'    => auth()->id(),
+            'status'         => 'pending',
         ]);
 
-        $this->paymentService->allocateDeposit($deposit);
-        $this->syncShareStatus($member);
-
+        // No allocation until admin approves
         return redirect()->route('member.deposits.index')
-            ->with('success', 'Deposit recorded successfully.');
+            ->with('success', 'Deposit submitted and is pending admin approval.');
     }
 
     public function edit(Deposit $deposit)
     {
         $this->authorizeDeposit($deposit);
+        abort_if(!$deposit->isPending(), 403, 'Only pending deposits can be edited.');
         $member = $this->member();
 
         return view('member.deposits.edit', compact('deposit', 'member'));
@@ -82,15 +82,16 @@ class DepositController extends Controller
     public function update(Request $request, Deposit $deposit)
     {
         $this->authorizeDeposit($deposit);
+        abort_if(!$deposit->isPending(), 403, 'Only pending deposits can be edited.');
 
         $request->validate([
-            'amount'          => ['required', 'numeric', 'min:1'],
-            'deposit_date'    => ['required', 'date'],
-            'bank_name'       => ['nullable', 'string', 'max:255'],
-            'bank_reference'  => ['nullable', 'string', 'max:255'],
-            'receipt_number'  => ['nullable', 'string', 'max:255'],
-            'note'            => ['nullable', 'string'],
-            'attachment'      => ['nullable', 'file', 'mimes:jpeg,jpg,png,pdf', 'max:5120'],
+            'amount'            => ['required', 'numeric', 'min:1'],
+            'deposit_date'      => ['required', 'date'],
+            'bank_name'         => ['nullable', 'string', 'max:255'],
+            'bank_reference'    => ['nullable', 'string', 'max:255'],
+            'receipt_number'    => ['nullable', 'string', 'max:255'],
+            'note'              => ['nullable', 'string'],
+            'attachment'        => ['nullable', 'file', 'mimes:jpeg,jpg,png,pdf', 'max:5120'],
             'remove_attachment' => ['nullable', 'boolean'],
         ]);
 
@@ -117,29 +118,25 @@ class DepositController extends Controller
 
         $deposit->update($updateData);
 
-        $member = $this->member();
-        $this->paymentService->reallocateAll($member);
-        $this->syncShareStatus($member);
-
+        // No reallocation — deposit is still pending, not yet counted
         return redirect()->route('member.deposits.index')
-            ->with('success', 'Deposit updated successfully.');
+            ->with('success', 'Deposit updated. It is still pending admin approval.');
     }
 
     public function destroy(Deposit $deposit)
     {
         $this->authorizeDeposit($deposit);
-        $member = $this->member();
+        abort_if(!$deposit->isPending(), 403, 'Only pending deposits can be deleted.');
 
         if ($deposit->attachment) {
             Storage::disk('public')->delete($deposit->attachment);
         }
 
         $deposit->delete();
-        $this->paymentService->reallocateAll($member);
-        $this->syncShareStatus($member);
+        // No reallocation needed — pending deposits are never allocated
 
         return redirect()->route('member.deposits.index')
-            ->with('success', 'Deposit deleted.');
+            ->with('success', 'Deposit cancelled.');
     }
 
     public function togglePermission()
@@ -159,20 +156,5 @@ class DepositController extends Controller
         abort_if($deposit->member_id !== auth()->user()->member_id, 403);
     }
 
-    private function syncShareStatus(Member $member): void
-    {
-        $share = $member->shares()->latest()->first();
-        if (!$share) return;
-
-        $totalDeposited = $member->deposits()->sum('amount');
-        $totalAmount    = $member->total_amount;
-
-        if ($totalDeposited >= $totalAmount) {
-            $share->update(['status' => 'paid']);
-        } elseif ($totalDeposited > 0) {
-            $share->update(['status' => 'partial']);
-        } else {
-            $share->update(['status' => 'pending']);
-        }
-    }
 }
+

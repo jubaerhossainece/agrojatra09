@@ -100,7 +100,8 @@
 
     <p class="text-xs text-gray-400 text-center">
         Payments are auto-allocated from your deposits to the oldest unpaid month first.
-        Due date is the 20th of each month (31st for May 2026).
+        If you deposit more than the monthly amount, the surplus covers future months automatically.
+        Due date is the 20th of each month (30th for June 2026).
     </p>
 
 </div>

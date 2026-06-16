@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 class MonthlyPaymentService
 {
     const GROUP_START_YEAR  = 2026;
-    const GROUP_START_MONTH = 5; // May
+    const GROUP_START_MONTH = 6; // June
 
     /**
      * Generate MonthlyPayment records for all active members for a given year/month.
@@ -68,12 +68,15 @@ class MonthlyPaymentService
     }
 
     /**
-     * After a deposit is saved, allocate its amount to the oldest unpaid monthly
+     * After a deposit is approved, allocate its amount to the oldest unpaid monthly
      * payment records for that member, cascading until funds are exhausted.
      * Existing allocations for this deposit are cleared and recalculated.
+     * Silently skips if the deposit is not approved.
      */
     public function allocateDeposit(Deposit $deposit): void
     {
+        if ($deposit->status !== 'approved') return;
+
         DB::transaction(function () use ($deposit) {
             // Remove old allocations for this deposit so we can recalculate
             DepositAllocation::where('deposit_id', $deposit->id)->delete();
@@ -164,8 +167,8 @@ class MonthlyPaymentService
                 $member->deposits()->pluck('id')
             )->delete();
 
-            // Replay deposits in chronological order
-            $deposits = $member->deposits()->orderBy('deposit_date')->orderBy('id')->get();
+            // Replay only approved deposits in chronological order
+            $deposits = $member->deposits()->where('status', 'approved')->orderBy('deposit_date')->orderBy('id')->get();
 
             foreach ($deposits as $deposit) {
                 $remaining = (float) $deposit->amount;

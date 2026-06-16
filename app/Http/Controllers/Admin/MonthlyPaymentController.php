@@ -80,4 +80,70 @@ class MonthlyPaymentController extends Controller
 
         return back()->with('success', $msg);
     }
+
+    /**
+     * Bulk-update the due date for all records of a given month.
+     */
+    public function updateDueDate(Request $request, int $year, int $month)
+    {
+        $request->validate(['due_date' => 'required|date']);
+
+        $updated = MonthlyPayment::where('payment_year', $year)
+            ->where('payment_month', $month)
+            ->update(['due_date' => $request->due_date]);
+
+        // Re-check late flags since the due date changed
+        $memberIds = MonthlyPayment::where('payment_year', $year)
+            ->where('payment_month', $month)
+            ->pluck('member_id');
+
+        foreach ($memberIds as $id) {
+            $this->service->refreshLateFlags($id);
+        }
+
+        $label = Carbon::create($year, $month, 1)->format('F Y');
+
+        return back()->with('success', "Due date updated for {$label} ({$updated} records).");
+    }
+
+    /**
+     * Delete all payment records for a month and reallocate deposits.
+     */
+    public function deleteMonth(int $year, int $month)
+    {
+        $start = Carbon::create(MonthlyPaymentService::GROUP_START_YEAR, MonthlyPaymentService::GROUP_START_MONTH, 1);
+        $target = Carbon::create($year, $month, 1);
+
+        if ($target->lt($start)) {
+            return back()->with('error', 'Cannot delete payments before group start.');
+        }
+
+        $memberIds = MonthlyPayment::where('payment_year', $year)
+            ->where('payment_month', $month)
+            ->pluck('member_id');
+
+        MonthlyPayment::where('payment_year', $year)
+            ->where('payment_month', $month)
+            ->delete(); // deposit_allocations cascade via FK
+
+        $members = \App\Models\Member::whereIn('id', $memberIds)->get();
+        foreach ($members as $member) {
+            $this->service->reallocateAll($member);
+        }
+
+        $label = $target->format('F Y');
+
+        return redirect()->route('admin.monthly-payments.index', ['year' => $year])
+            ->with('success', "Deleted all payment records for {$label}. Deposits have been reallocated.");
+    }
+
+    /**
+     * Override is_late to false for a single payment record.
+     */
+    public function overrideLate(MonthlyPayment $monthlyPayment)
+    {
+        $monthlyPayment->update(['is_late' => false]);
+
+        return back()->with('success', "Marked {$monthlyPayment->member->full_name}'s {$monthlyPayment->month_label} payment as on-time.");
+    }
 }

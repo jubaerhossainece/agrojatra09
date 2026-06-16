@@ -27,14 +27,19 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
     Route::resource('members', AdminMember::class);
     Route::resource('deposits', AdminDeposit::class)->except(['edit', 'update']);
+    Route::post('/deposits/{deposit}/approve', [AdminDeposit::class, 'approve'])->name('deposits.approve');
+    Route::post('/deposits/{deposit}/reject', [AdminDeposit::class, 'reject'])->name('deposits.reject');
     Route::get('/reports', [AdminReport::class, 'index'])->name('reports.index');
     Route::get('/opinions', [AdminOpinion::class, 'index'])->name('opinions.index');
     Route::get('/users', [AdminUser::class, 'index'])->name('users.index');
     Route::put('/users/{user}', [AdminUser::class, 'update'])->name('users.update');
     // Monthly payments
     Route::get('/monthly-payments', [AdminMonthlyPayment::class, 'index'])->name('monthly-payments.index');
-    Route::get('/monthly-payments/{year}/{month}', [AdminMonthlyPayment::class, 'show'])->name('monthly-payments.show');
     Route::post('/monthly-payments/generate', [AdminMonthlyPayment::class, 'generate'])->name('monthly-payments.generate');
+    Route::get('/monthly-payments/{year}/{month}', [AdminMonthlyPayment::class, 'show'])->name('monthly-payments.show');
+    Route::patch('/monthly-payments/{year}/{month}/due-date', [AdminMonthlyPayment::class, 'updateDueDate'])->name('monthly-payments.update-due-date');
+    Route::delete('/monthly-payments/{year}/{month}', [AdminMonthlyPayment::class, 'deleteMonth'])->name('monthly-payments.delete-month');
+    Route::patch('/monthly-payments/{monthlyPayment}/override-late', [AdminMonthlyPayment::class, 'overrideLate'])->name('monthly-payments.override-late');
     // Share change requests
     Route::post('/members/{member}/share-change', [AdminShareChange::class, 'store'])->name('members.share-change.store');
 });

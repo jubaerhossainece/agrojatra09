@@ -21,6 +21,9 @@ class Deposit extends Model
         'note',
         'attachment',
         'recorded_by',
+        'status',
+        'approved_by',
+        'approved_at',
     ];
 
     public function attachmentUrl(): ?string
@@ -37,9 +40,14 @@ class Deposit extends Model
     {
         return [
             'deposit_date' => 'date',
-            'amount' => 'decimal:2',
+            'amount'       => 'decimal:2',
+            'approved_at'  => 'datetime',
         ];
     }
+
+    public function isApproved(): bool { return $this->status === 'approved'; }
+    public function isPending(): bool  { return $this->status === 'pending'; }
+    public function isRejected(): bool { return $this->status === 'rejected'; }
 
     public function member()
     {
@@ -54,6 +62,11 @@ class Deposit extends Model
     public function recorder()
     {
         return $this->belongsTo(User::class, 'recorded_by');
+    }
+
+    public function approver()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 
     public function allocations()

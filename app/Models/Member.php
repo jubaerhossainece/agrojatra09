@@ -93,7 +93,7 @@ class Member extends Model
 
     public function getTotalDepositedAttribute()
     {
-        return $this->deposits()->sum('amount');
+        return $this->deposits()->where('status', 'approved')->sum('amount');
     }
 
     public function getBalanceDueAttribute()

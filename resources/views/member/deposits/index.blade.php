@@ -40,6 +40,9 @@
     </div>
 
     {{-- Balance Summary --}}
+    @php
+        $pendingAmount = $deposits->where('status', 'pending')->sum('amount');
+    @endphp
     <div class="grid grid-cols-3 gap-4">
         <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center">
             <p class="text-xl font-bold text-gray-900">৳ {{ number_format($member->total_amount) }}</p>
@@ -47,7 +50,10 @@
         </div>
         <div class="bg-green-50 rounded-xl border border-green-200 shadow-sm p-4 text-center">
             <p class="text-xl font-bold text-green-700">৳ {{ number_format($member->total_deposited) }}</p>
-            <p class="text-xs text-gray-500 mt-0.5">Total Deposited</p>
+            <p class="text-xs text-gray-500 mt-0.5">Approved Deposits</p>
+            @if($pendingAmount > 0)
+                <p class="text-xs text-amber-600 mt-0.5">+ ৳{{ number_format($pendingAmount) }} pending</p>
+            @endif
         </div>
         <div class="bg-{{ $member->balance_due > 0 ? 'amber' : 'green' }}-50 rounded-xl border border-{{ $member->balance_due > 0 ? 'amber' : 'green' }}-200 shadow-sm p-4 text-center">
             <p class="text-xl font-bold text-{{ $member->balance_due > 0 ? 'amber' : 'green' }}-700">৳ {{ number_format($member->balance_due) }}</p>
@@ -74,21 +80,31 @@
                     <tr>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Date</th>
                         <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Amount</th>
+                        <th class="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Status</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden sm:table-cell">Bank</th>
                         <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Reference</th>
-                        <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Receipt</th>
                         <th class="px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell"></th>
                         <th class="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
                     @foreach($deposits as $deposit)
-                        <tr class="hover:bg-gray-50 transition-colors">
+                        <tr class="{{ $deposit->isPending() ? 'bg-amber-50 hover:bg-amber-100' : 'hover:bg-gray-50' }} transition-colors">
                             <td class="px-4 py-3 text-gray-700">{{ $deposit->deposit_date->format('d M Y') }}</td>
-                            <td class="px-4 py-3 text-right font-semibold text-green-700">৳ {{ number_format($deposit->amount) }}</td>
+                            <td class="px-4 py-3 text-right font-semibold {{ $deposit->isApproved() ? 'text-green-700' : ($deposit->isRejected() ? 'text-gray-400 line-through' : 'text-amber-700') }}">
+                                ৳ {{ number_format($deposit->amount) }}
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                @if($deposit->isPending())
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">Pending</span>
+                                @elseif($deposit->isApproved())
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">Approved</span>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-600">Rejected</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3 text-gray-500 hidden sm:table-cell">{{ $deposit->bank_name ?? '—' }}</td>
                             <td class="px-4 py-3 text-gray-500 hidden md:table-cell">{{ $deposit->bank_reference ?? '—' }}</td>
-                            <td class="px-4 py-3 text-gray-500 hidden md:table-cell">{{ $deposit->receipt_number ?? '—' }}</td>
                             <td class="px-4 py-3 hidden md:table-cell">
                                 @if($deposit->attachment)
                                     <a href="{{ $deposit->attachmentUrl() }}" target="_blank"
@@ -101,24 +117,28 @@
                             </td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-2">
-                                    <a href="{{ route('member.deposits.edit', $deposit) }}"
-                                       class="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors">
-                                        Edit
-                                    </a>
-                                    <form method="POST" action="{{ route('member.deposits.destroy', $deposit) }}">
-                                        @csrf @method('DELETE')
-                                        <button x-data type="button"
-                                                @click="$dispatch('open-confirm', {
-                                                    title: 'Delete Deposit',
-                                                    message: 'This deposit record will be permanently removed.',
-                                                    confirmLabel: 'Delete',
-                                                    confirmClass: 'bg-red-600 hover:bg-red-700',
-                                                    target: $el.closest('form')
-                                                })"
-                                                class="text-red-600 hover:text-red-800 text-xs font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors">
-                                            Delete
-                                        </button>
-                                    </form>
+                                    @if($deposit->isPending())
+                                        <a href="{{ route('member.deposits.edit', $deposit) }}"
+                                           class="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors">
+                                            Edit
+                                        </a>
+                                        <form method="POST" action="{{ route('member.deposits.destroy', $deposit) }}">
+                                            @csrf @method('DELETE')
+                                            <button x-data type="button"
+                                                    @click="$dispatch('open-confirm', {
+                                                        title: 'Cancel Deposit',
+                                                        message: 'This pending deposit will be removed.',
+                                                        confirmLabel: 'Cancel it',
+                                                        confirmClass: 'bg-red-600 hover:bg-red-700',
+                                                        target: $el.closest('form')
+                                                    })"
+                                                    class="text-red-600 hover:text-red-800 text-xs font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors">
+                                                Cancel
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="text-xs text-gray-400">—</span>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -126,8 +146,8 @@
                 </tbody>
                 <tfoot class="bg-gray-50 border-t border-gray-200">
                     <tr>
-                        <td class="px-4 py-2 text-xs font-semibold text-gray-600">Total</td>
-                        <td class="px-4 py-2 text-right font-bold text-green-700">৳ {{ number_format($deposits->sum('amount')) }}</td>
+                        <td class="px-4 py-2 text-xs font-semibold text-gray-600">Approved total</td>
+                        <td class="px-4 py-2 text-right font-bold text-green-700">৳ {{ number_format($deposits->where('status','approved')->sum('amount')) }}</td>
                         <td colspan="5" class="hidden md:table-cell"></td>
                     </tr>
                 </tfoot>

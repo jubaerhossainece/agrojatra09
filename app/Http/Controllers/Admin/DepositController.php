@@ -28,10 +28,16 @@ class DepositController extends Controller
             $query->whereDate('deposit_date', '<=', $request->date_to);
         }
 
-        $deposits = $query->paginate(15)->withQueryString();
-        $members  = Member::orderBy('full_name')->get();
+        $status = $request->status; // pending | approved | rejected | null (all)
+        if (in_array($status, ['pending', 'approved', 'rejected'])) {
+            $query->where('status', $status);
+        }
 
-        return view('admin.deposits.index', compact('deposits', 'members'));
+        $deposits      = $query->paginate(15)->withQueryString();
+        $members       = Member::orderBy('full_name')->get();
+        $pendingCount  = Deposit::where('status', 'pending')->count();
+
+        return view('admin.deposits.index', compact('deposits', 'members', 'pendingCount', 'status'));
     }
 
     public function create(Request $request)
@@ -63,6 +69,9 @@ class DepositController extends Controller
         }
 
         $data['recorded_by'] = auth()->id();
+        $data['status']      = 'approved';
+        $data['approved_by'] = auth()->id();
+        $data['approved_at'] = now();
 
         if ($request->hasFile('attachment')) {
             $data['attachment'] = $request->file('attachment')
@@ -75,26 +84,63 @@ class DepositController extends Controller
         $this->syncShareStatus($member);
 
         return redirect()->route('admin.deposits.index')
-            ->with('success', 'Deposit recorded successfully.');
+            ->with('success', 'Deposit recorded and approved.');
     }
 
     public function show(Deposit $deposit)
     {
-        $deposit->load(['member', 'recorder', 'share']);
+        $deposit->load(['member', 'recorder', 'share', 'approver']);
         return view('admin.deposits.show', compact('deposit'));
+    }
+
+    public function approve(Deposit $deposit)
+    {
+        if (!$deposit->isPending()) {
+            return back()->with('error', 'Only pending deposits can be approved.');
+        }
+
+        $deposit->update([
+            'status'      => 'approved',
+            'approved_by' => auth()->id(),
+            'approved_at' => now(),
+        ]);
+
+        $this->paymentService->allocateDeposit($deposit);
+        $this->syncShareStatus($deposit->member);
+
+        return back()->with('success', "{$deposit->member->full_name}'s deposit of ৳" . number_format((float) $deposit->amount) . " has been approved.");
+    }
+
+    public function reject(Deposit $deposit)
+    {
+        if (!$deposit->isPending()) {
+            return back()->with('error', 'Only pending deposits can be rejected.');
+        }
+
+        $deposit->update([
+            'status'      => 'rejected',
+            'approved_by' => auth()->id(),
+            'approved_at' => now(),
+        ]);
+
+        return back()->with('success', "{$deposit->member->full_name}'s deposit has been rejected.");
     }
 
     public function destroy(Deposit $deposit)
     {
-        $member = $deposit->member;
+        $member      = $deposit->member;
+        $wasApproved = $deposit->isApproved();
 
         if ($deposit->attachment) {
             Storage::disk('public')->delete($deposit->attachment);
         }
 
         $deposit->delete();
-        $this->paymentService->reallocateAll($member);
-        $this->syncShareStatus($member);
+
+        if ($wasApproved) {
+            $this->paymentService->reallocateAll($member);
+            $this->syncShareStatus($member);
+        }
 
         return redirect()->route('admin.deposits.index')
             ->with('success', 'Deposit deleted.');
@@ -105,7 +151,7 @@ class DepositController extends Controller
         $share = $member->shares()->latest()->first();
         if (!$share) return;
 
-        $totalDeposited = $member->deposits()->sum('amount');
+        $totalDeposited = $member->deposits()->where('status', 'approved')->sum('amount');
         $totalAmount    = $member->total_amount;
 
         if ($totalDeposited >= $totalAmount) {

@@ -88,10 +88,10 @@ RUN sed -i \
         /usr/local/etc/php-fpm.d/www.conf
 
 # Config files
-COPY nginx.conf       /etc/nginx/nginx.conf
-COPY supervisord.conf /etc/supervisord.conf
-COPY opcache.ini      /usr/local/etc/php/conf.d/opcache.ini
-COPY entrypoint.sh    /entrypoint.sh
+COPY conf/nginx.conf       /etc/nginx/nginx.conf
+COPY conf/supervisord.conf /etc/supervisord.conf
+COPY conf/opcache.ini      /usr/local/etc/php/conf.d/opcache.ini
+COPY entrypoint.sh         /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 WORKDIR /var/www/html
