@@ -93,7 +93,9 @@ class MemberController extends Controller
     public function show(Member $member)
     {
         $member->load(['nominee', 'shares', 'deposits.recorder', 'groupOpinion']);
-        return view('admin.members.show', compact('member'));
+        $pendingShareChange   = $member->shareChangeRequests()->where('status', 'pending')->latest()->first();
+        $shareChangeHistory   = $member->shareChangeRequests()->with('requestedBy')->latest()->get();
+        return view('admin.members.show', compact('member', 'pendingShareChange', 'shareChangeHistory'));
     }
 
     public function edit(Member $member)

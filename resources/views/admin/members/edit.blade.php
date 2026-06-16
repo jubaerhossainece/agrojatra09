@@ -33,19 +33,61 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Blood Group</label>
-                    <select name="blood_group" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none">
-                        <option value="">Select</option>
-                        @foreach(['A+','A-','B+','B-','AB+','AB-','O+','O-'] as $bg)
-                            <option value="{{ $bg }}" {{ old('blood_group', $member->blood_group) === $bg ? 'selected' : '' }}>{{ $bg }}</option>
-                        @endforeach
-                    </select>
+                    @php $initBg = old('blood_group', $member->blood_group ?? ''); @endphp
+                    <div x-data="{ open: false, value: '{{ $initBg }}', label: '{{ $initBg ?: 'Select' }}' }"
+                         @click.outside="open = false" class="relative">
+                        <input type="hidden" name="blood_group" :value="value">
+                        <button type="button" @click="open = !open"
+                                class="w-full flex items-center justify-between gap-2 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-left text-gray-700 hover:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors cursor-pointer">
+                            <span x-text="label" class="truncate"></span>
+                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-150" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div x-show="open"
+                             x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                             x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                             class="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                            <div class="py-1">
+                                <button type="button" @click="value = ''; label = 'Select'; open = false"
+                                        :class="{ 'bg-green-50 text-green-700 font-semibold': value === '' }"
+                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">Select</button>
+                                @foreach(['A+','A-','B+','B-','AB+','AB-','O+','O-'] as $bg)
+                                    <button type="button" @click="value = '{{ $bg }}'; label = '{{ $bg }}'; open = false"
+                                            :class="{ 'bg-green-50 text-green-700 font-semibold': value === '{{ $bg }}' }"
+                                            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">{{ $bg }}</button>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                    <select name="status" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none">
-                        <option value="active" {{ old('status', $member->status) === 'active' ? 'selected' : '' }}>Active</option>
-                        <option value="inactive" {{ old('status', $member->status) === 'inactive' ? 'selected' : '' }}>Inactive</option>
-                    </select>
+                    @php $initStatus = old('status', $member->status); $initStatusLabel = $initStatus === 'active' ? 'Active' : 'Inactive'; @endphp
+                    <div x-data="{ open: false, value: '{{ $initStatus }}', label: '{{ $initStatusLabel }}' }"
+                         @click.outside="open = false" class="relative">
+                        <input type="hidden" name="status" :value="value">
+                        <button type="button" @click="open = !open"
+                                class="w-full flex items-center justify-between gap-2 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-left text-gray-700 hover:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors cursor-pointer">
+                            <span x-text="label" class="truncate"></span>
+                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-150" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div x-show="open"
+                             x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                             x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                             class="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                            <div class="py-1">
+                                <button type="button" @click="value = 'active'; label = 'Active'; open = false"
+                                        :class="{ 'bg-green-50 text-green-700 font-semibold': value === 'active' }"
+                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">Active</button>
+                                <button type="button" @click="value = 'inactive'; label = 'Inactive'; open = false"
+                                        :class="{ 'bg-green-50 text-green-700 font-semibold': value === 'inactive' }"
+                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">Inactive</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Photo</label>

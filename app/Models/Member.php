@@ -66,6 +66,16 @@ class Member extends Model
         return $this->hasMany(MonthlyPayment::class);
     }
 
+    public function shareChangeRequests()
+    {
+        return $this->hasMany(ShareChangeRequest::class);
+    }
+
+    public function pendingShareChangeRequest()
+    {
+        return $this->hasOne(ShareChangeRequest::class)->where('status', 'pending')->latest();
+    }
+
     public function getLatestShareAttribute()
     {
         return $this->shares()->latest()->first();

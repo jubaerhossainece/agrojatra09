@@ -6,12 +6,14 @@ use App\Http\Controllers\Admin\MemberController as AdminMember;
 use App\Http\Controllers\Admin\MonthlyPaymentController as AdminMonthlyPayment;
 use App\Http\Controllers\Admin\OpinionController as AdminOpinion;
 use App\Http\Controllers\Admin\ReportController as AdminReport;
+use App\Http\Controllers\Admin\ShareChangeController as AdminShareChange;
 use App\Http\Controllers\Admin\UserController as AdminUser;
 use App\Http\Controllers\Member\DashboardController as MemberDashboard;
 use App\Http\Controllers\Member\DepositController as MemberDeposit;
 use App\Http\Controllers\Member\MembersController as MemberMembers;
 use App\Http\Controllers\Member\PaymentScheduleController as MemberPaymentSchedule;
 use App\Http\Controllers\Member\ProfileController as MemberProfile;
+use App\Http\Controllers\Member\ShareChangeController as MemberShareChange;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -33,6 +35,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/monthly-payments', [AdminMonthlyPayment::class, 'index'])->name('monthly-payments.index');
     Route::get('/monthly-payments/{year}/{month}', [AdminMonthlyPayment::class, 'show'])->name('monthly-payments.show');
     Route::post('/monthly-payments/generate', [AdminMonthlyPayment::class, 'generate'])->name('monthly-payments.generate');
+    // Share change requests
+    Route::post('/members/{member}/share-change', [AdminShareChange::class, 'store'])->name('members.share-change.store');
 });
 
 // Member routes
@@ -44,6 +48,9 @@ Route::prefix('member')->name('member.')->middleware(['auth', 'member'])->group(
     Route::get('/payment-schedule', [MemberPaymentSchedule::class, 'index'])->name('payment-schedule');
     Route::get('/members', [MemberMembers::class, 'index'])->name('members.index');
     Route::get('/members/{member}', [MemberMembers::class, 'show'])->name('members.show');
+    // Share change requests
+    Route::post('/share-changes/{shareChangeRequest}/approve', [MemberShareChange::class, 'approve'])->name('share-change.approve');
+    Route::post('/share-changes/{shareChangeRequest}/reject', [MemberShareChange::class, 'reject'])->name('share-change.reject');
 });
 
 // Redirect /dashboard to role-based dashboard

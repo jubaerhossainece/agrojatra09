@@ -105,10 +105,16 @@
                                        class="text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors">
                                         Edit
                                     </a>
-                                    <form method="POST" action="{{ route('member.deposits.destroy', $deposit) }}"
-                                          onsubmit="return confirm('Delete this deposit?')">
+                                    <form method="POST" action="{{ route('member.deposits.destroy', $deposit) }}">
                                         @csrf @method('DELETE')
-                                        <button type="submit"
+                                        <button x-data type="button"
+                                                @click="$dispatch('open-confirm', {
+                                                    title: 'Delete Deposit',
+                                                    message: 'This deposit record will be permanently removed.',
+                                                    confirmLabel: 'Delete',
+                                                    confirmClass: 'bg-red-600 hover:bg-red-700',
+                                                    target: $el.closest('form')
+                                                })"
                                                 class="text-red-600 hover:text-red-800 text-xs font-medium px-2 py-1 rounded hover:bg-red-50 transition-colors">
                                             Delete
                                         </button>

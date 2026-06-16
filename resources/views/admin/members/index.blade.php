@@ -17,15 +17,40 @@
     </div>
 
     {{-- Search/Filter --}}
+    @php
+        $statusLabel = match(request('status')) { 'active' => 'Active', 'inactive' => 'Inactive', default => 'All Status' };
+    @endphp
     <form method="GET" class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex flex-wrap gap-3">
         <input type="text" name="search" value="{{ request('search') }}"
                placeholder="Search by name, phone, email..."
                class="flex-1 min-w-[200px] border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
-        <select name="status" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none">
-            <option value="">All Status</option>
-            <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
-            <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactive</option>
-        </select>
+        <div x-data="{ open: false, value: '{{ request('status', '') }}', label: '{{ $statusLabel }}' }"
+             @click.outside="open = false" class="relative">
+            <input type="hidden" name="status" :value="value">
+            <button type="button" @click="open = !open"
+                    class="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 hover:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors cursor-pointer whitespace-nowrap min-w-[130px] justify-between">
+                <span x-text="label"></span>
+                <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-150" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <div x-show="open"
+                 x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                 class="absolute z-50 mt-1 w-full min-w-[130px] bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                <div class="py-1">
+                    <button type="button" @click="value = ''; label = 'All Status'; open = false"
+                            :class="{ 'bg-green-50 text-green-700 font-semibold': value === '' }"
+                            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">All Status</button>
+                    <button type="button" @click="value = 'active'; label = 'Active'; open = false"
+                            :class="{ 'bg-green-50 text-green-700 font-semibold': value === 'active' }"
+                            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">Active</button>
+                    <button type="button" @click="value = 'inactive'; label = 'Inactive'; open = false"
+                            :class="{ 'bg-green-50 text-green-700 font-semibold': value === 'inactive' }"
+                            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">Inactive</button>
+                </div>
+            </div>
+        </div>
         <button type="submit"
                 class="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
             Search
@@ -94,10 +119,16 @@
                                    class="text-blue-600 hover:text-blue-800 font-medium text-xs px-2 py-1 rounded hover:bg-blue-50 transition-colors">
                                     Edit
                                 </a>
-                                <form method="POST" action="{{ route('admin.members.destroy', $member) }}"
-                                      onsubmit="return confirm('Delete this member?')">
+                                <form method="POST" action="{{ route('admin.members.destroy', $member) }}">
                                     @csrf @method('DELETE')
-                                    <button type="submit"
+                                    <button x-data type="button"
+                                            @click="$dispatch('open-confirm', {
+                                                title: 'Delete Member',
+                                                message: 'This will permanently remove the member and all associated data.',
+                                                confirmLabel: 'Delete',
+                                                confirmClass: 'bg-red-600 hover:bg-red-700',
+                                                target: $el.closest('form')
+                                            })"
                                             class="text-red-600 hover:text-red-800 font-medium text-xs px-2 py-1 rounded hover:bg-red-50 transition-colors">
                                         Delete
                                     </button>

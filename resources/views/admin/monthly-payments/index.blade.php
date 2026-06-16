@@ -23,22 +23,62 @@
         </div>
 
         {{-- Generate button --}}
+        @php
+            $monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        @endphp
         <form method="POST" action="{{ route('admin.monthly-payments.generate') }}"
-              x-data="{ year: {{ now()->year }}, month: {{ now()->month }} }">
+              x-data="{ year: {{ now()->year }}, yearOpen: false, month: {{ now()->month }}, monthOpen: false }">
             @csrf
+            <input type="hidden" name="year" :value="year">
+            <input type="hidden" name="month" :value="month">
             <div class="flex items-center gap-2">
-                <select name="year" x-model="year"
-                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none">
-                    @for($y = 2026; $y <= now()->year + 1; $y++)
-                        <option value="{{ $y }}" {{ $y == now()->year ? 'selected' : '' }}>{{ $y }}</option>
-                    @endfor
-                </select>
-                <select name="month" x-model="month"
-                        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none">
-                    @foreach(['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] as $i => $m)
-                        <option value="{{ $i + 1 }}" {{ ($i + 1) == now()->month ? 'selected' : '' }}>{{ $m }}</option>
-                    @endforeach
-                </select>
+
+                {{-- Year dropdown --}}
+                <div @click.outside="yearOpen = false" class="relative">
+                    <button type="button" @click="yearOpen = !yearOpen"
+                            class="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 hover:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors cursor-pointer w-24 justify-between">
+                        <span x-text="year"></span>
+                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-150" :class="{ 'rotate-180': yearOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div x-show="yearOpen"
+                         x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                         x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                         class="absolute z-50 mt-1 w-24 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                        <div class="py-1">
+                            @for($y = 2026; $y <= now()->year + 1; $y++)
+                                <button type="button" @click="year = {{ $y }}; yearOpen = false"
+                                        :class="{ 'bg-green-50 text-green-700 font-semibold': year === {{ $y }} }"
+                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">{{ $y }}</button>
+                            @endfor
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Month dropdown --}}
+                <div @click.outside="monthOpen = false" class="relative">
+                    <button type="button" @click="monthOpen = !monthOpen"
+                            class="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 hover:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors cursor-pointer w-24 justify-between">
+                        <span x-text="['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][month - 1]"></span>
+                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-150" :class="{ 'rotate-180': monthOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div x-show="monthOpen"
+                         x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                         x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                         class="absolute z-50 mt-1 w-24 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                        <div class="py-1">
+                            @foreach($monthNames as $i => $mn)
+                                <button type="button" @click="month = {{ $i + 1 }}; monthOpen = false"
+                                        :class="{ 'bg-green-50 text-green-700 font-semibold': month === {{ $i + 1 }} }"
+                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">{{ $mn }}</button>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
                 <button type="submit"
                         class="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
                     Generate Records

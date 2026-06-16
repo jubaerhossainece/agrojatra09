@@ -14,13 +14,40 @@
     </div>
 
     {{-- Filters --}}
+    @php
+        $selectedMemberLabel = 'All Members';
+        if (request('member_id')) {
+            $found = $members->firstWhere('id', request('member_id'));
+            if ($found) $selectedMemberLabel = $found->full_name;
+        }
+    @endphp
     <form method="GET" class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex flex-wrap gap-3">
-        <select name="member_id" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none">
-            <option value="">All Members</option>
-            @foreach($members as $m)
-                <option value="{{ $m->id }}" {{ request('member_id') == $m->id ? 'selected' : '' }}>{{ $m->full_name }}</option>
-            @endforeach
-        </select>
+        <div x-data="{ open: false, value: '{{ request('member_id', '') }}', label: '{{ addslashes($selectedMemberLabel) }}' }"
+             @click.outside="open = false" class="relative">
+            <input type="hidden" name="member_id" :value="value">
+            <button type="button" @click="open = !open"
+                    class="flex items-center gap-2 bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 hover:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors cursor-pointer whitespace-nowrap min-w-[160px] justify-between">
+                <span x-text="label" class="truncate max-w-[140px]"></span>
+                <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-150" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <div x-show="open"
+                 x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                 class="absolute z-50 mt-1 w-56 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                <div class="py-1 max-h-56 overflow-y-auto">
+                    <button type="button" @click="value = ''; label = 'All Members'; open = false"
+                            :class="{ 'bg-green-50 text-green-700 font-semibold': value === '' }"
+                            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">All Members</button>
+                    @foreach($members as $m)
+                        <button type="button" @click="value = '{{ $m->id }}'; label = '{{ addslashes($m->full_name) }}'; open = false"
+                                :class="{ 'bg-green-50 text-green-700 font-semibold': value === '{{ $m->id }}' }"
+                                class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">{{ $m->full_name }}</button>
+                    @endforeach
+                </div>
+            </div>
+        </div>
         <input type="date" name="date_from" value="{{ request('date_from') }}"
                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none">
         <input type="date" name="date_to" value="{{ request('date_to') }}"
@@ -84,10 +111,16 @@
                                    class="text-blue-600 hover:text-blue-800 font-medium text-xs px-2 py-1 rounded hover:bg-blue-50 transition-colors">
                                     View
                                 </a>
-                                <form method="POST" action="{{ route('admin.deposits.destroy', $deposit) }}"
-                                      onsubmit="return confirm('Delete this deposit?')">
+                                <form method="POST" action="{{ route('admin.deposits.destroy', $deposit) }}">
                                     @csrf @method('DELETE')
-                                    <button type="submit"
+                                    <button x-data type="button"
+                                            @click="$dispatch('open-confirm', {
+                                                title: 'Delete Deposit',
+                                                message: 'This deposit record will be permanently removed.',
+                                                confirmLabel: 'Delete',
+                                                confirmClass: 'bg-red-600 hover:bg-red-700',
+                                                target: $el.closest('form')
+                                            })"
                                             class="text-red-600 hover:text-red-800 font-medium text-xs px-2 py-1 rounded hover:bg-red-50 transition-colors">
                                         Delete
                                     </button>

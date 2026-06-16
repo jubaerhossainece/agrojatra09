@@ -32,17 +32,42 @@
                         <td class="px-4 py-3 text-right">
                             @if($user->id !== auth()->id())
                                 <form method="POST" action="{{ route('admin.users.update', $user) }}"
-                                      class="flex items-center justify-end gap-2"
-                                      onsubmit="return confirm('Update this user?')">
+                                      class="flex items-center justify-end gap-2">
                                     @csrf @method('PUT')
-                                    <select name="role"
-                                            class="border border-gray-300 rounded-lg px-2 py-1 text-xs focus:ring-1 focus:ring-green-500 outline-none">
-                                        <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
-                                        <option value="member" {{ $user->role === 'member' ? 'selected' : '' }}>Member</option>
-                                    </select>
+                                    <div x-data="{ open: false, value: '{{ $user->role }}', label: '{{ ucfirst($user->role) }}' }"
+                                         @click.outside="open = false" class="relative">
+                                        <input type="hidden" name="role" :value="value">
+                                        <button type="button" @click="open = !open"
+                                                class="flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg px-2.5 py-1 text-xs text-gray-700 hover:border-green-400 focus:outline-none focus:ring-1 focus:ring-green-500 transition-colors cursor-pointer w-24 justify-between">
+                                            <span x-text="label"></span>
+                                            <svg class="w-3 h-3 text-gray-400 flex-shrink-0 transition-transform duration-150" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                            </svg>
+                                        </button>
+                                        <div x-show="open"
+                                             x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                                             x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                                             class="absolute right-0 z-50 mt-1 w-28 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                                            <div class="py-1">
+                                                <button type="button" @click="value = 'admin'; label = 'Admin'; open = false"
+                                                        :class="{ 'bg-green-50 text-green-700 font-semibold': value === 'admin' }"
+                                                        class="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">Admin</button>
+                                                <button type="button" @click="value = 'member'; label = 'Member'; open = false"
+                                                        :class="{ 'bg-green-50 text-green-700 font-semibold': value === 'member' }"
+                                                        class="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">Member</button>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <input type="text" name="password" placeholder="New password (optional)"
                                            class="border border-gray-300 rounded-lg px-2 py-1 text-xs focus:ring-1 focus:ring-green-500 outline-none w-40 hidden md:block">
-                                    <button type="submit"
+                                    <button x-data type="button"
+                                            @click="$dispatch('open-confirm', {
+                                                title: 'Update User',
+                                                message: 'Save the new role for this user?',
+                                                confirmLabel: 'Save Changes',
+                                                confirmClass: 'bg-green-700 hover:bg-green-800',
+                                                target: $el.closest('form')
+                                            })"
                                             class="bg-green-700 hover:bg-green-800 text-white px-3 py-1 rounded-lg text-xs font-medium transition-colors">
                                         Save
                                     </button>

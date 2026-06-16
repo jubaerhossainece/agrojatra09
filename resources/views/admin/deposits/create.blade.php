@@ -43,19 +43,31 @@
                     Member <span class="text-red-500">*</span>
                     <span class="text-xs text-gray-400 font-normal ml-1">(permission-granted only)</span>
                 </label>
-                <select name="member_id" required x-model="selectedMemberId" @change="fetchMemberInfo"
-                        class="w-full border {{ $errors->has('member_id') ? 'border-red-400' : 'border-gray-300' }} rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none"
-                        {{ $members->isEmpty() ? 'disabled' : '' }}>
-                    <option value="">Select Member</option>
-                    @foreach($members as $m)
-                        <option value="{{ $m->id }}"
-                                data-amount="{{ $m->total_amount }}"
-                                data-deposited="{{ $m->total_deposited }}"
-                                {{ old('member_id') == $m->id || (isset($selectedMember) && $selectedMember->id == $m->id) ? 'selected' : '' }}>
-                            {{ $m->full_name }}
-                        </option>
-                    @endforeach
-                </select>
+                <div x-data="{ open: false }" @click.outside="open = false" class="relative">
+                    <input type="hidden" name="member_id" :value="selectedMemberId">
+                    <button type="button" @click="open = !open" {{ $members->isEmpty() ? 'disabled' : '' }}
+                            class="{{ $errors->has('member_id') ? 'border-red-400' : 'border-gray-300' }} w-full flex items-center justify-between gap-2 bg-white border rounded-lg px-3 py-2 text-sm text-left text-gray-700 hover:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50">
+                        <span x-text="memberLabel" class="truncate"></span>
+                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform duration-150" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div x-show="open"
+                         x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                         x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                         class="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                        <div class="py-1 max-h-56 overflow-y-auto">
+                            <button type="button" @click="selectMember(null); open = false"
+                                    :class="{ 'bg-green-50 text-green-700 font-semibold': !selectedMemberId }"
+                                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">Select Member</button>
+                            @foreach($members as $m)
+                                <button type="button" @click="selectMember({{ $m->id }}); open = false"
+                                        :class="{ 'bg-green-50 text-green-700 font-semibold': selectedMemberId == {{ $m->id }} }"
+                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">{{ $m->full_name }}</button>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
                 @error('member_id')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
             </div>
 
@@ -136,17 +148,22 @@
 
 <script>
 function depositForm() {
+    const memberData = @json($members->mapWithKeys(fn($m) => [$m->id => ['amount' => (float) $m->total_amount, 'deposited' => (float) $m->total_deposited]])->toArray());
+    const memberLabels = @json($members->mapWithKeys(fn($m) => [$m->id => $m->full_name])->toArray());
+    const preselectedId = @json(old('member_id', isset($selectedMember) ? $selectedMember->id : null));
+
     return {
-        selectedMemberId: @json(old('member_id', isset($selectedMember) ? $selectedMember->id : '')),
-        totalAmount: @json(isset($selectedMember) ? (float) $selectedMember->total_amount : 0),
-        deposited: @json(isset($selectedMember) ? (float) $selectedMember->total_deposited : 0),
+        selectedMemberId: preselectedId,
+        memberLabel: preselectedId ? (memberLabels[preselectedId] ?? 'Select Member') : 'Select Member',
+        totalAmount: preselectedId ? (memberData[preselectedId]?.amount ?? 0) : 0,
+        deposited:   preselectedId ? (memberData[preselectedId]?.deposited ?? 0) : 0,
         get balanceDue() { return this.totalAmount - this.deposited; },
-        init() { if (this.selectedMemberId) this.fetchMemberInfo(); },
-        fetchMemberInfo() {
-            const sel = document.querySelector('select[name="member_id"]');
-            const opt = sel.options[sel.selectedIndex];
-            this.totalAmount = parseFloat(opt.dataset.amount || 0);
-            this.deposited   = parseFloat(opt.dataset.deposited || 0);
+        init() {},
+        selectMember(id) {
+            this.selectedMemberId = id;
+            this.memberLabel = id ? (memberLabels[id] ?? 'Select Member') : 'Select Member';
+            this.totalAmount = id ? (memberData[id]?.amount ?? 0) : 0;
+            this.deposited   = id ? (memberData[id]?.deposited ?? 0) : 0;
         }
     }
 }

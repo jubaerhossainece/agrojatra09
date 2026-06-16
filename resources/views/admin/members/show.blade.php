@@ -110,6 +110,105 @@
                 </div>
             </div>
 
+            {{-- Share Change Request --}}
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                <h3 class="font-semibold text-gray-800 mb-4">Request Share Count Change</h3>
+
+                @if(session('success'))
+                    <div class="mb-4 bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-800">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                @if($pendingShareChange)
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm space-y-1">
+                        <p class="font-semibold text-amber-800">Awaiting member approval</p>
+                        <p class="text-amber-700">
+                            Requested change: <strong>{{ $pendingShareChange->old_shares }}</strong> → <strong>{{ $pendingShareChange->new_shares }}</strong> shares
+                            (৳ {{ number_format($pendingShareChange->new_shares * 2000) }})
+                        </p>
+                        @if($pendingShareChange->admin_note)
+                            <p class="text-amber-600 text-xs">Note: {{ $pendingShareChange->admin_note }}</p>
+                        @endif
+                        <p class="text-amber-400 text-xs">Sent {{ $pendingShareChange->created_at->diffForHumans() }}</p>
+                    </div>
+                @else
+                    <form method="POST" action="{{ route('admin.members.share-change.store', $member) }}" class="space-y-3">
+                        @csrf
+                        <div class="flex gap-3">
+                            <div class="flex-1">
+                                <label class="block text-xs font-medium text-gray-600 mb-1">New Share Count <span class="text-red-500">*</span></label>
+                                <input type="number" name="new_shares"
+                                       value="{{ old('new_shares', $member->total_shares) }}"
+                                       min="1" max="100" required
+                                       class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                <p class="text-xs text-gray-400 mt-0.5">Current: {{ $member->total_shares }} shares (৳ {{ number_format($member->total_amount) }})</p>
+                            </div>
+                            <div class="flex items-end pb-6">
+                                <button x-data type="button"
+                                        @click="$dispatch('open-confirm', {
+                                            title: 'Send Share Change Request',
+                                            message: 'This will notify {{ addslashes($member->full_name) }} and ask them to approve the new share count. Continue?',
+                                            confirmLabel: 'Send Request',
+                                            confirmClass: 'bg-blue-600 hover:bg-blue-700',
+                                            target: $el.closest('form')
+                                        })"
+                                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap">
+                                    Send Request
+                                </button>
+                            </div>
+                        </div>
+                        <input type="text" name="admin_note" placeholder="Optional note to member..."
+                               value="{{ old('admin_note') }}"
+                               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <p class="text-xs text-gray-400">The member will be notified and must approve this change before it takes effect.</p>
+                    </form>
+                @endif
+
+                {{-- History --}}
+                @if($shareChangeHistory->isNotEmpty())
+                    <div class="mt-5 pt-5 border-t border-gray-100">
+                        <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Request History</h4>
+                        <div class="space-y-2">
+                            @foreach($shareChangeHistory as $req)
+                                <div class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <div class="space-y-0.5">
+                                            <p class="text-gray-800 font-medium">
+                                                {{ $req->old_shares }} → {{ $req->new_shares }} shares
+                                                <span class="text-gray-400 font-normal">(৳ {{ number_format($req->new_shares * 2000) }})</span>
+                                            </p>
+                                            <p class="text-xs text-gray-500">
+                                                Requested by <span class="font-medium text-gray-700">{{ $req->requestedBy?->name ?? 'Admin' }}</span>
+                                                on {{ $req->created_at->format('d M Y, h:i A') }}
+                                            </p>
+                                            @if($req->reviewed_at)
+                                                <p class="text-xs text-gray-500">
+                                                    {{ ucfirst($req->status) }} by member on {{ $req->reviewed_at->format('d M Y, h:i A') }}
+                                                </p>
+                                            @endif
+                                            @if($req->admin_note)
+                                                <p class="text-xs text-gray-400 italic">Admin note: {{ $req->admin_note }}</p>
+                                            @endif
+                                            @if($req->member_note)
+                                                <p class="text-xs text-gray-400 italic">Member note: {{ $req->member_note }}</p>
+                                            @endif
+                                        </div>
+                                        <span @class([
+                                            'text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0',
+                                            'bg-green-100 text-green-700' => $req->status === 'approved',
+                                            'bg-red-100 text-red-600'     => $req->status === 'rejected',
+                                            'bg-amber-100 text-amber-700' => $req->status === 'pending',
+                                            'bg-gray-100 text-gray-500'   => $req->status === 'cancelled',
+                                        ])>{{ ucfirst($req->status) }}</span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            </div>
+
             {{-- Deposit History --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">

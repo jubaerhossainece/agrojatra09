@@ -13,6 +13,9 @@ class DashboardController extends Controller
         $member = Member::with(['nominee', 'shares', 'deposits', 'groupOpinion'])
             ->findOrFail($user->member_id);
 
-        return view('member.dashboard', compact('member'));
+        $pendingShareChange  = $member->shareChangeRequests()->where('status', 'pending')->latest()->first();
+        $shareChangeHistory  = $member->shareChangeRequests()->with('requestedBy')->latest()->get();
+
+        return view('member.dashboard', compact('member', 'pendingShareChange', 'shareChangeHistory'));
     }
 }
