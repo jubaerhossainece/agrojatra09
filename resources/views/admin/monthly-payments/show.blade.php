@@ -18,6 +18,7 @@
                     Edit Due Date
                 </button>
                 <div x-show="open"
+                     style="display:none"
                      x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                      x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
                      class="absolute right-0 z-50 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-lg p-4">
@@ -45,7 +46,7 @@
                     </svg>
                     Delete Month
                 </button>
-                <div x-show="confirm" class="flex items-center gap-2">
+                <div x-show="confirm" style="display:none" class="flex items-center gap-2">
                     <span class="text-xs text-red-600 font-medium">Delete all records?</span>
                     <form method="POST" action="{{ route('admin.monthly-payments.delete-month', [$year, $month]) }}">
                         @csrf

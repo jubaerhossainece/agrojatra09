@@ -53,6 +53,7 @@
                         </svg>
                     </button>
                     <div x-show="open"
+                         style="display:none"
                          x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
                          x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
                          class="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
@@ -72,7 +73,9 @@
             </div>
 
             {{-- Balance summary --}}
-            <div x-show="selectedMemberId" x-transition class="bg-green-50 border border-green-200 rounded-lg p-3 text-sm">
+            <div x-show="selectedMemberId" x-transition
+                 style="{{ old('member_id') || isset($selectedMember) ? '' : 'display:none' }}"
+                 class="bg-green-50 border border-green-200 rounded-lg p-3 text-sm">
                 <div class="grid grid-cols-3 gap-2 text-center">
                     <div>
                         <p class="text-xs text-gray-500">Total Amount</p>
