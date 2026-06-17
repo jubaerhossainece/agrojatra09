@@ -10,11 +10,12 @@ class AdminMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check() || !auth()->user()->isAdmin()) {
-            if (auth()->check() && auth()->user()->isMember()) {
-                return redirect()->route('member.dashboard');
-            }
+        if (!auth()->check()) {
             return redirect()->route('login');
+        }
+
+        if (!auth()->user()->isAdmin()) {
+            return redirect()->route('member.dashboard');
         }
 
         return $next($request);

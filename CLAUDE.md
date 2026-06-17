@@ -41,12 +41,14 @@ php artisan tinker
 
 ## Architecture
 
-### Role-Based Access
-Two roles (`admin`, `member`) are enforced by middleware aliases registered in `bootstrap/app.php`:
-- `admin` → `AdminMiddleware` — blocks non-admins, redirects members to their dashboard
-- `member` → `MemberMiddleware` — blocks non-members, redirects admins to their dashboard
+### Position-Based Access
+There is no separate "admin" identity — every `User` is fundamentally a member (`User belongsTo Member` via `member_id`). Admin access is granted by setting `users.position` to `president`, `secretary`, or `accountant`; `User::isAdmin()` is just `position !== null`. A position-holder can use both panels under one login (e.g. submit their own deposit through the normal member panel, not a special admin workaround).
 
-After login, `AuthenticatedSessionController::store()` redirects based on role. The `/dashboard` route also redirects based on role.
+Middleware aliases registered in `bootstrap/app.php`:
+- `admin` → `AdminMiddleware` — blocks non-position users, redirects them to `member.dashboard`
+- `member` → `MemberMiddleware` — only requires authentication; does not gate on position, since position-holders are members too
+
+After login, `AuthenticatedSessionController::store()` and the `/dashboard` route both redirect to `admin.dashboard` or `member.dashboard` based on `isAdmin()`. Positions are managed on `/admin/users` (one Position dropdown per user: None/President/Secretary/Accountant). `position_permissions` (via `PositionPermission`, cached with `Cache::rememberForever`) further gates per-position abilities like `approve_deposits`/`delete_deposits`, checked via `$user->hasPermission()` / `canApproveDeposits()` / `canDeleteDeposits()`.
 
 ### Route Structure
 All routes are in `routes/web.php`:
@@ -64,7 +66,7 @@ All routes are in `routes/web.php`:
 - `balance_due` — total_amount − total_deposited
 - `payment_status` — `pending` / `partial` / `paid` derived from the above
 
-Relationships: `Member` → hasOne `Nominee`, hasMany `Share`, hasMany `Deposit`, hasOne `GroupOpinion`, hasOne `User`.
+Relationships: `Member` → hasOne `Nominee`, hasMany `Share`, hasMany `Deposit`, hasOne `GroupOpinion`, hasOne `User`. The bootstrap admin seeded by `DatabaseSeeder` is the one `User` with no `member_id` — every other `User` row is tied to a `Member`.
 
 **Share value**: 1 share = BDT 2,000. `total_amount` on `shares` is always `number_of_shares × 2000`.
 
@@ -76,7 +78,7 @@ Layouts live in `resources/views/components/layouts/` (not `resources/views/layo
 - `<x-layouts.member>` — top-nav layout for member panel
 
 Reusable components in `resources/views/components/`:
-- `<x-badge :status="$status">` — maps status strings to color classes (`paid`, `partial`, `pending`, `active`, `inactive`, `admin`, `member`)
+- `<x-badge :status="$status">` — maps status strings to color classes (`paid`, `partial`, `pending`, `active`, `inactive`)
 - `<x-stat-card label="" value="" sub="" color="" icon="">` — dashboard stat card
 
 ### Frontend Stack
@@ -86,4 +88,4 @@ Vite + Tailwind CSS v3 + Alpine.js v3. Alpine is used inline for reactive bits (
 MySQL, `agrojatra09` database. Session and cache both use the `file` driver (not database). `QUEUE_CONNECTION=database` but no queued jobs are currently used.
 
 ### Seeded Data
-`DatabaseSeeder` creates the admin user then calls `MemberSeeder`. `MemberSeeder` contains all 17 founding members hard-coded (no Excel import at runtime). Each member gets a `User` account with password `agrojatra09`. Admin password is `admin123`.
+`DatabaseSeeder` creates a bootstrap admin (`agrojatra09@gmail.com` / `admin123`, `position = president`, no `member_id`) then calls `MemberSeeder`. `MemberSeeder` contains all 17 founding members hard-coded (no Excel import at runtime); each gets a `User` account (password `agrojatra09`) with `member_id` set, no `position`. The bootstrap admin is meant to be a one-time login used to promote a real founding member to `president` and then be retired — that hand-off is manual, not scripted.

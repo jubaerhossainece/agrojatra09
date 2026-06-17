@@ -17,7 +17,7 @@ echo "Deploying commit: $GIT_SHA"
 
 GIT_SHA=$GIT_SHA docker compose \
   -f "$SCRIPT_DIR/docker-compose.yml" \
-  --env-file "$REPO_DIR/.env" \
+  --env-file "$SCRIPT_DIR/conf/.env" \
   up --build -d
 
 echo "Done. App running at http://localhost:8080"

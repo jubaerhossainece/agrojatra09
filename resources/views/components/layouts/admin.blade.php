@@ -97,6 +97,29 @@
             </svg>
             Users
         </a>
+
+        @if(auth()->user()->member)
+        <a href="{{ route('member.dashboard') }}"
+           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-green-100 hover:bg-green-700">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+            Member Panel
+        </a>
+        @endif
+
+        @if(auth()->user()->isPresident())
+        <a href="{{ route('admin.permissions.index') }}"
+           class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                  {{ request()->routeIs('admin.permissions*') ? 'bg-green-700 text-white' : 'text-green-100 hover:bg-green-700' }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            Permissions
+        </a>
+        @endif
     </nav>
 
     {{-- Sidebar user section --}}
@@ -110,7 +133,7 @@
             </div>
             <div class="flex-1 overflow-hidden text-left">
                 <div class="text-sm font-medium truncate">{{ auth()->user()->name }}</div>
-                <div class="text-green-400 text-xs">Administrator</div>
+                <div class="text-green-400 text-xs">{{ auth()->user()->positionLabel() }}</div>
             </div>
             <svg class="w-3.5 h-3.5 text-green-400 transition-transform duration-200 flex-shrink-0"
                  :class="{ 'rotate-180': open }"
@@ -162,7 +185,81 @@
     {{-- Top bar --}}
     <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-40">
         <h1 class="text-xl font-semibold text-gray-800">{{ $title ?? 'Dashboard' }}</h1>
-        <div class="text-sm text-gray-400">{{ now()->format('d M Y') }}</div>
+        <div class="flex items-center gap-4">
+            <div class="text-sm text-gray-400 hidden sm:block">{{ now()->format('d M Y') }}</div>
+
+            {{-- Admin profile dropdown --}}
+            <div x-data="{ open: false }" @click.outside="open = false" class="relative">
+                <button @click="open = !open"
+                        class="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-gray-100 transition-colors focus:outline-none group">
+                    <div class="w-8 h-8 rounded-full bg-green-100 text-green-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                    </div>
+                    <div class="text-left leading-tight hidden sm:block">
+                        <div class="text-sm font-semibold text-gray-800">{{ auth()->user()->name }}</div>
+                        <div class="text-xs text-gray-400">{{ auth()->user()->positionLabel() }}</div>
+                    </div>
+                    <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-150 hidden sm:block"
+                         :class="{ 'rotate-180': open }"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+
+                <div x-show="open"
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95"
+                     style="display:none"
+                     class="absolute right-0 mt-2 w-52 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
+
+                    {{-- Header --}}
+                    <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+                        <p class="text-sm font-semibold text-gray-900 truncate">{{ auth()->user()->name }}</p>
+                        <p class="text-xs text-gray-400 truncate">{{ auth()->user()->email }}</p>
+                    </div>
+
+                    <div class="py-1">
+                        <a href="{{ route('admin.profile') }}"
+                           class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            My Profile
+                        </a>
+
+                        @if(auth()->user()->isPresident())
+                        <a href="{{ route('admin.permissions.index') }}"
+                           class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                            Permissions
+                        </a>
+                        @endif
+                    </div>
+
+                    <div class="border-t border-gray-100 py-1">
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit"
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                </svg>
+                                Sign Out
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </header>
 
     {{-- Flash messages --}}

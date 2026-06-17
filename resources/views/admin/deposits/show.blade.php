@@ -67,20 +67,22 @@
         @endif
     </div>
 
-    <form method="POST" action="{{ route('admin.deposits.destroy', $deposit) }}">
-        @csrf @method('DELETE')
-        <button x-data type="button"
-                @click="$dispatch('open-confirm', {
-                    title: 'Delete Deposit',
-                    message: 'This deposit record will be permanently removed.',
-                    confirmLabel: 'Delete',
-                    confirmClass: 'bg-red-600 hover:bg-red-700',
-                    target: $el.closest('form')
-                })"
-                class="text-red-600 hover:text-red-800 text-sm font-medium px-4 py-2 rounded-lg border border-red-200 hover:bg-red-50 transition-colors">
-            Delete Deposit
-        </button>
-    </form>
+    @if(auth()->user()->canDeleteDeposits())
+        <form method="POST" action="{{ route('admin.deposits.destroy', $deposit) }}">
+            @csrf @method('DELETE')
+            <button x-data type="button"
+                    @click="$dispatch('open-confirm', {
+                        title: 'Delete Deposit',
+                        message: 'This deposit record will be permanently removed.',
+                        confirmLabel: 'Delete',
+                        confirmClass: 'bg-red-600 hover:bg-red-700',
+                        target: $el.closest('form')
+                    })"
+                    class="text-red-600 hover:text-red-800 text-sm font-medium px-4 py-2 rounded-lg border border-red-200 hover:bg-red-50 transition-colors">
+                Delete Deposit
+            </button>
+        </form>
+    @endif
 
 </div>
 

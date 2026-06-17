@@ -23,6 +23,9 @@
     <form method="GET" class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex flex-wrap gap-3">
         <input type="text" name="search" value="{{ request('search') }}"
                placeholder="Search by name, phone, email..."
+               x-data
+               x-init="if ($el.value) { $el.focus(); $el.setSelectionRange($el.value.length, $el.value.length); }"
+               x-on:input.debounce.500ms="$el.form.submit()"
                class="flex-1 min-w-[200px] border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
         <div x-data="{ open: false, value: '{{ request('status', '') }}', label: '{{ $statusLabel }}' }"
              @click.outside="open = false" class="relative">
@@ -35,17 +38,18 @@
                 </svg>
             </button>
             <div x-show="open"
+                 style="display:none"
                  x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
                  x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
                  class="absolute z-50 mt-1 w-full min-w-[130px] bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
                 <div class="py-1">
-                    <button type="button" @click="value = ''; label = 'All Status'; open = false"
+                    <button type="button" @click="value = ''; label = 'All Status'; open = false; $nextTick(() => $el.closest('form').submit())"
                             :class="{ 'bg-green-50 text-green-700 font-semibold': value === '' }"
                             class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">All Status</button>
-                    <button type="button" @click="value = 'active'; label = 'Active'; open = false"
+                    <button type="button" @click="value = 'active'; label = 'Active'; open = false; $nextTick(() => $el.closest('form').submit())"
                             :class="{ 'bg-green-50 text-green-700 font-semibold': value === 'active' }"
                             class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">Active</button>
-                    <button type="button" @click="value = 'inactive'; label = 'Inactive'; open = false"
+                    <button type="button" @click="value = 'inactive'; label = 'Inactive'; open = false; $nextTick(() => $el.closest('form').submit())"
                             :class="{ 'bg-green-50 text-green-700 font-semibold': value === 'inactive' }"
                             class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700 transition-colors">Inactive</button>
                 </div>

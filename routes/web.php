@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\MonthlyPaymentController as AdminMonthlyPayment;
 use App\Http\Controllers\Admin\OpinionController as AdminOpinion;
 use App\Http\Controllers\Admin\ReportController as AdminReport;
 use App\Http\Controllers\Admin\ShareChangeController as AdminShareChange;
+use App\Http\Controllers\Admin\PermissionController as AdminPermission;
+use App\Http\Controllers\Admin\ProfileController as AdminProfile;
 use App\Http\Controllers\Admin\UserController as AdminUser;
 use App\Http\Controllers\Member\DashboardController as MemberDashboard;
 use App\Http\Controllers\Member\DepositController as MemberDeposit;
@@ -33,6 +35,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/opinions', [AdminOpinion::class, 'index'])->name('opinions.index');
     Route::get('/users', [AdminUser::class, 'index'])->name('users.index');
     Route::put('/users/{user}', [AdminUser::class, 'update'])->name('users.update');
+    Route::get('/profile', [AdminProfile::class, 'show'])->name('profile');
+    Route::put('/profile/password', [AdminProfile::class, 'updatePassword'])->name('profile.password');
+    Route::get('/permissions', [AdminPermission::class, 'index'])->name('permissions.index');
+    Route::post('/permissions', [AdminPermission::class, 'update'])->name('permissions.update');
     // Monthly payments
     Route::get('/monthly-payments', [AdminMonthlyPayment::class, 'index'])->name('monthly-payments.index');
     Route::post('/monthly-payments/generate', [AdminMonthlyPayment::class, 'generate'])->name('monthly-payments.generate');
@@ -42,6 +48,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::patch('/monthly-payments/{monthlyPayment}/override-late', [AdminMonthlyPayment::class, 'overrideLate'])->name('monthly-payments.override-late');
     // Share change requests
     Route::post('/members/{member}/share-change', [AdminShareChange::class, 'store'])->name('members.share-change.store');
+    Route::post('/share-changes/{shareChangeRequest}/approve', [AdminShareChange::class, 'approve'])->name('share-changes.approve');
+    Route::post('/share-changes/{shareChangeRequest}/reject', [AdminShareChange::class, 'reject'])->name('share-changes.reject');
 });
 
 // Member routes

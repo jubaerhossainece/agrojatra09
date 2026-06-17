@@ -3,11 +3,31 @@
 <div class="max-w-4xl space-y-4">
 
     <div class="flex items-center justify-between">
-        <h1 class="text-lg font-bold text-gray-900">Members <span class="text-gray-400 font-normal text-base">({{ $members->count() }})</span></h1>
+        <h1 class="text-lg font-bold text-gray-900">Members <span class="text-gray-400 font-normal text-base">({{ $members->total() }})</span></h1>
     </div>
 
+    {{-- Search --}}
+    <form method="GET" class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex flex-wrap gap-3">
+        <input type="text" name="search" value="{{ request('search') }}"
+               placeholder="Search by name or email..."
+               x-data
+               x-init="if ($el.value) { $el.focus(); $el.setSelectionRange($el.value.length, $el.value.length); }"
+               x-on:input.debounce.500ms="$el.form.submit()"
+               class="flex-1 min-w-[200px] border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
+        <button type="submit"
+                class="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            Search
+        </button>
+        @if(request()->hasAny(['search']))
+            <a href="{{ route('member.members.index') }}"
+               class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                Clear
+            </a>
+        @endif
+    </form>
+
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        @foreach($members as $member)
+        @forelse($members as $member)
             <a href="{{ route('member.members.show', $member) }}"
                class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 hover:border-green-300 hover:shadow-md transition-all group">
 
@@ -50,8 +70,16 @@
                     @endif
                 </div>
             </a>
-        @endforeach
+        @empty
+            <p class="col-span-full text-center text-gray-400 py-8">No members found.</p>
+        @endforelse
     </div>
+
+    @if($members->hasPages())
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm px-4 py-3">
+            {{ $members->links() }}
+        </div>
+    @endif
 
 </div>
 

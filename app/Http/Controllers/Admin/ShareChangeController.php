@@ -30,4 +30,42 @@ class ShareChangeController extends Controller
 
         return back()->with('success', 'Share change request sent to ' . $member->full_name . ' for approval.');
     }
+
+    public function approve(ShareChangeRequest $shareChangeRequest)
+    {
+        abort_if(auth()->user()->member_id !== $shareChangeRequest->member_id, 403);
+        abort_if($shareChangeRequest->status !== 'pending', 403);
+        abort_if($shareChangeRequest->requested_by === auth()->id(), 403, 'You cannot approve a request you initiated yourself.');
+
+        $member = $shareChangeRequest->member;
+        $share  = $member->shares()->first();
+        if ($share) {
+            $share->update([
+                'number_of_shares' => $shareChangeRequest->new_shares,
+                'total_amount'     => $shareChangeRequest->new_shares * 2000,
+            ]);
+        }
+
+        $shareChangeRequest->update([
+            'status'      => 'approved',
+            'reviewed_at' => now(),
+        ]);
+
+        return back()->with('success', 'Share count updated to ' . $shareChangeRequest->new_shares . '.');
+    }
+
+    public function reject(Request $request, ShareChangeRequest $shareChangeRequest)
+    {
+        abort_if(auth()->user()->member_id !== $shareChangeRequest->member_id, 403);
+        abort_if($shareChangeRequest->status !== 'pending', 403);
+        abort_if($shareChangeRequest->requested_by === auth()->id(), 403, 'You cannot reject a request you initiated yourself.');
+
+        $shareChangeRequest->update([
+            'status'      => 'rejected',
+            'reviewed_at' => now(),
+            'member_note' => $request->input('member_note'),
+        ]);
+
+        return back()->with('success', 'Share change request rejected.');
+    }
 }

@@ -149,8 +149,8 @@
                         </td>
                         <td class="px-4 py-3 text-right">
                             <div class="flex items-center justify-end gap-2">
-                                {{-- Approve / Reject for pending --}}
-                                @if($deposit->isPending())
+                                {{-- Approve / Reject: only accountant or president --}}
+                                @if($deposit->isPending() && auth()->user()->canApproveDeposits())
                                     <form method="POST" action="{{ route('admin.deposits.approve', $deposit) }}">
                                         @csrf
                                         <button type="submit"
@@ -165,25 +165,29 @@
                                             Reject
                                         </button>
                                     </form>
+                                @elseif($deposit->isPending())
+                                    <span class="text-xs text-gray-400 italic">Pending</span>
                                 @endif
                                 <a href="{{ route('admin.deposits.show', $deposit) }}"
                                    class="text-blue-600 hover:text-blue-800 font-medium text-xs px-2 py-1 rounded hover:bg-blue-50 transition-colors">
                                     View
                                 </a>
-                                <form method="POST" action="{{ route('admin.deposits.destroy', $deposit) }}">
-                                    @csrf @method('DELETE')
-                                    <button x-data type="button"
-                                            @click="$dispatch('open-confirm', {
-                                                title: 'Delete Deposit',
-                                                message: 'This deposit record will be permanently removed.',
-                                                confirmLabel: 'Delete',
-                                                confirmClass: 'bg-red-600 hover:bg-red-700',
-                                                target: $el.closest('form')
-                                            })"
-                                            class="text-red-600 hover:text-red-800 font-medium text-xs px-2 py-1 rounded hover:bg-red-50 transition-colors">
-                                        Delete
-                                    </button>
-                                </form>
+                                @if(auth()->user()->canDeleteDeposits())
+                                    <form method="POST" action="{{ route('admin.deposits.destroy', $deposit) }}">
+                                        @csrf @method('DELETE')
+                                        <button x-data type="button"
+                                                @click="$dispatch('open-confirm', {
+                                                    title: 'Delete Deposit',
+                                                    message: 'This deposit record will be permanently removed.',
+                                                    confirmLabel: 'Delete',
+                                                    confirmClass: 'bg-red-600 hover:bg-red-700',
+                                                    target: $el.closest('form')
+                                                })"
+                                                class="text-red-600 hover:text-red-800 font-medium text-xs px-2 py-1 rounded hover:bg-red-50 transition-colors">
+                                            Delete
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </td>
                     </tr>

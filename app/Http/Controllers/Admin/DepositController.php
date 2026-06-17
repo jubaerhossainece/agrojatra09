@@ -95,6 +95,8 @@ class DepositController extends Controller
 
     public function approve(Deposit $deposit)
     {
+        abort_if(!auth()->user()->canApproveDeposits(), 403, 'Only the accountant or president can approve deposits.');
+
         if (!$deposit->isPending()) {
             return back()->with('error', 'Only pending deposits can be approved.');
         }
@@ -113,6 +115,8 @@ class DepositController extends Controller
 
     public function reject(Deposit $deposit)
     {
+        abort_if(!auth()->user()->canApproveDeposits(), 403, 'Only the accountant or president can reject deposits.');
+
         if (!$deposit->isPending()) {
             return back()->with('error', 'Only pending deposits can be rejected.');
         }
@@ -128,6 +132,8 @@ class DepositController extends Controller
 
     public function destroy(Deposit $deposit)
     {
+        abort_if(!auth()->user()->canDeleteDeposits(), 403, 'Only the accountant can delete deposits.');
+
         $member      = $deposit->member;
         $wasApproved = $deposit->isApproved();
 

@@ -14,14 +14,6 @@ class MemberMiddleware
             return redirect()->route('login');
         }
 
-        if (auth()->user()->isAdmin()) {
-            return redirect()->route('admin.dashboard');
-        }
-
-        if (!auth()->user()->isMember()) {
-            return redirect()->route('login');
-        }
-
         return $next($request);
     }
 }

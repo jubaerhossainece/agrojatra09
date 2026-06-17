@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Cache;
 
 class User extends Authenticatable
 {
@@ -14,7 +15,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
+        'position',
         'member_id',
     ];
 
@@ -38,11 +39,52 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->position !== null;
     }
 
-    public function isMember(): bool
+    public function isPresident(): bool
     {
-        return $this->role === 'member';
+        return $this->position === 'president';
+    }
+
+    public function isSecretary(): bool
+    {
+        return $this->position === 'secretary';
+    }
+
+    public function isAccountant(): bool
+    {
+        return $this->position === 'accountant';
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        if (!$this->position) return false;
+
+        $perms = Cache::rememberForever("position_perms_{$this->position}", fn() =>
+            PositionPermission::where('position', $this->position)->pluck('permission')->all()
+        );
+
+        return in_array($permission, $perms);
+    }
+
+    public function canApproveDeposits(): bool
+    {
+        return $this->hasPermission('approve_deposits');
+    }
+
+    public function canDeleteDeposits(): bool
+    {
+        return $this->hasPermission('delete_deposits');
+    }
+
+    public function positionLabel(): string
+    {
+        return match ($this->position) {
+            'president'  => 'President',
+            'secretary'  => 'Secretary',
+            'accountant' => 'Accountant',
+            default      => 'Administrator',
+        };
     }
 }

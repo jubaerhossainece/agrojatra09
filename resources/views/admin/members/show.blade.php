@@ -121,8 +121,11 @@
                 @endif
 
                 @if($pendingShareChange)
-                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm space-y-1">
-                        <p class="font-semibold text-amber-800">Awaiting member approval</p>
+                    @php $isSelf = auth()->user()->member_id === $member->id; @endphp
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm space-y-2">
+                        <p class="font-semibold text-amber-800">
+                            {{ $isSelf ? 'Pending your approval' : 'Awaiting member approval' }}
+                        </p>
                         <p class="text-amber-700">
                             Requested change: <strong>{{ $pendingShareChange->old_shares }}</strong> → <strong>{{ $pendingShareChange->new_shares }}</strong> shares
                             (৳ {{ number_format($pendingShareChange->new_shares * 2000) }})
@@ -131,6 +134,34 @@
                             <p class="text-amber-600 text-xs">Note: {{ $pendingShareChange->admin_note }}</p>
                         @endif
                         <p class="text-amber-400 text-xs">Sent {{ $pendingShareChange->created_at->diffForHumans() }}</p>
+
+                        @if($isSelf && $pendingShareChange->requested_by !== auth()->id())
+                            <div class="flex gap-2 pt-1">
+                                <form method="POST" action="{{ route('admin.share-changes.approve', $pendingShareChange) }}">
+                                    @csrf
+                                    <button type="submit"
+                                            class="bg-green-700 hover:bg-green-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors">
+                                        Approve
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ route('admin.share-changes.reject', $pendingShareChange) }}">
+                                    @csrf
+                                    <button x-data type="button"
+                                            @click="$dispatch('open-confirm', {
+                                                title: 'Reject Share Change',
+                                                message: 'Are you sure you want to reject this share change request?',
+                                                confirmLabel: 'Reject',
+                                                confirmClass: 'bg-red-600 hover:bg-red-700',
+                                                target: $el.closest('form')
+                                            })"
+                                            class="bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold px-3 py-1.5 rounded-lg border border-red-200 transition-colors">
+                                        Reject
+                                    </button>
+                                </form>
+                            </div>
+                        @elseif($isSelf && $pendingShareChange->requested_by === auth()->id())
+                            <p class="text-xs text-amber-500 italic">You initiated this request — another admin must send a new one for you to approve.</p>
+                        @endif
                     </div>
                 @else
                     <form method="POST" action="{{ route('admin.members.share-change.store', $member) }}" class="space-y-3">

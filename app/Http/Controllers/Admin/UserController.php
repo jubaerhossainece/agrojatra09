@@ -6,24 +6,34 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('member')->orderBy('name')->paginate(20);
+        $query = User::with('member')->orderBy('name');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                  ->orWhere('email', 'like', "%$search%");
+            });
+        }
+
+        $users = $query->paginate(20)->withQueryString();
         return view('admin.users.index', compact('users'));
     }
 
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'role'     => ['required', 'in:admin,member'],
+            'position' => ['nullable', 'in:president,secretary,accountant'],
             'password' => ['nullable', 'string', 'min:6'],
         ]);
 
-        $data = ['role' => $request->role];
+        $data = ['position' => $request->position];
+
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
         }

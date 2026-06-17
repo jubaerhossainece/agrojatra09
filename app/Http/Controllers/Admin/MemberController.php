@@ -82,7 +82,6 @@ class MemberController extends Controller
             'name'      => $member->full_name,
             'email'     => $member->email,
             'password'  => Hash::make('agrojatra09'),
-            'role'      => 'member',
             'member_id' => $member->id,
         ]);
 
