@@ -8,6 +8,12 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Guarded: the 2026_06_16_000002 migration adds these columns itself
+        // if they're missing, since it needs `status` before this migration runs.
+        if (Schema::hasColumn('deposits', 'status')) {
+            return;
+        }
+
         Schema::table('deposits', function (Blueprint $table) {
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('approved')->after('recorded_by');
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete()->after('status');
