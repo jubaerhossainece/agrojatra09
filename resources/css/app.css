@@ -1,3 +1,42 @@
+@import "flatpickr/dist/flatpickr.min.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Flatpickr theme — match the app's green palette */
+.flatpickr-calendar {
+    @apply rounded-xl border border-gray-200 shadow-lg font-sans;
+}
+.flatpickr-months .flatpickr-month,
+.flatpickr-current-month .flatpickr-monthDropdown-months,
+.flatpickr-current-month input.cur-year {
+    @apply text-gray-800;
+}
+.flatpickr-current-month .flatpickr-monthDropdown-months:hover {
+    @apply bg-gray-50;
+}
+.flatpickr-months .flatpickr-prev-month:hover svg,
+.flatpickr-months .flatpickr-next-month:hover svg {
+    fill: #15803d;
+}
+span.flatpickr-weekday {
+    @apply text-gray-500;
+}
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover,
+.flatpickr-day.selected.prevMonthDay,
+.flatpickr-day.selected.nextMonthDay {
+    @apply bg-green-700 border-green-700;
+}
+.flatpickr-day.today {
+    @apply border-green-600;
+}
+.flatpickr-day.today:hover {
+    @apply bg-green-50 border-green-600 text-green-700;
+}
+.flatpickr-day:hover {
+    @apply bg-green-50;
+}
+.flatpickr-day.selected:focus {
+    @apply bg-green-700;
+}

@@ -101,7 +101,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Deposit Date <span class="text-red-500">*</span></label>
-                    <input type="date" name="deposit_date" value="{{ old('deposit_date', date('Y-m-d')) }}" required
+                    <input type="text" data-datepicker name="deposit_date" value="{{ old('deposit_date', date('Y-m-d')) }}" required autocomplete="off"
                            class="w-full border {{ $errors->has('deposit_date') ? 'border-red-400' : 'border-gray-300' }} rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none">
                 </div>
                 <div>

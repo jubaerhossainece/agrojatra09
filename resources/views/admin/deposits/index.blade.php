@@ -76,9 +76,9 @@
                 </div>
             </div>
         </div>
-        <input type="date" name="date_from" value="{{ request('date_from') }}"
+        <input type="text" data-datepicker name="date_from" value="{{ request('date_from') }}" placeholder="From date" autocomplete="off"
                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none">
-        <input type="date" name="date_to" value="{{ request('date_to') }}"
+        <input type="text" data-datepicker name="date_to" value="{{ request('date_to') }}" placeholder="To date" autocomplete="off"
                class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none">
         <button type="submit"
                 class="bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
