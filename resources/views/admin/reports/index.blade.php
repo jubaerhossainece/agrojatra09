@@ -35,9 +35,33 @@
 
     {{-- Member-wise Summary --}}
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100">
-            <h2 class="font-semibold text-gray-800">Member-wise Investment Summary</h2>
-            <p class="text-sm text-gray-500 mt-0.5">Agrojatra09 · Batch 2009 · Magura</p>
+        <div class="px-6 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h2 class="font-semibold text-gray-800">Member-wise Investment Summary</h2>
+                <p class="text-sm text-gray-500 mt-0.5">Agrojatra09 · Batch 2009 · Magura</p>
+            </div>
+
+            {{-- Status tabs --}}
+            @php
+                $tabs = [
+                    null      => 'All',
+                    'paid'    => 'Paid',
+                    'partial' => 'Partial',
+                    'pending' => 'Pending',
+                ];
+            @endphp
+            <div class="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit print:hidden">
+                @foreach($tabs as $val => $tabLabel)
+                    <a href="{{ route('admin.reports.index', $val ? ['status' => $val] : []) }}"
+                       class="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors
+                              {{ $status === $val ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">
+                        {{ $tabLabel }}
+                        @if($val && $statusCounts[$val] > 0)
+                            <span class="ml-1 text-xs text-gray-400">({{ $statusCounts[$val] }})</span>
+                        @endif
+                    </a>
+                @endforeach
+            </div>
         </div>
         <table class="w-full text-sm">
             <thead class="bg-gray-50">
@@ -52,7 +76,7 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100">
-                @foreach($members as $i => $member)
+                @forelse($members as $i => $member)
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3 text-gray-400">{{ $i + 1 }}</td>
                         <td class="px-4 py-3">
@@ -72,15 +96,21 @@
                             <x-badge :status="$member->payment_status" />
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td colspan="7" class="px-4 py-10 text-center text-gray-400 text-sm">
+                            No {{ $status ? strtolower($tabs[$status]) . ' ' : '' }}members found.
+                        </td>
+                    </tr>
+                @endforelse
             </tbody>
             <tfoot class="bg-gray-50 border-t-2 border-gray-200 font-semibold">
                 <tr>
                     <td colspan="2" class="px-4 py-3 text-gray-700">TOTAL ({{ $members->count() }} Members)</td>
-                    <td class="px-4 py-3 text-center text-gray-800">{{ $totalShares }}</td>
-                    <td class="px-4 py-3 text-right text-gray-700">৳ {{ number_format($totalShareAmount) }}</td>
-                    <td class="px-4 py-3 text-right text-green-700">৳ {{ number_format($totalDeposited) }}</td>
-                    <td class="px-4 py-3 text-right text-amber-700">৳ {{ number_format($totalPending) }}</td>
+                    <td class="px-4 py-3 text-center text-gray-800">{{ $tableTotals['shares'] }}</td>
+                    <td class="px-4 py-3 text-right text-gray-700">৳ {{ number_format($tableTotals['amount']) }}</td>
+                    <td class="px-4 py-3 text-right text-green-700">৳ {{ number_format($tableTotals['deposited']) }}</td>
+                    <td class="px-4 py-3 text-right text-amber-700">৳ {{ number_format($tableTotals['pending']) }}</td>
                     <td></td>
                 </tr>
             </tfoot>

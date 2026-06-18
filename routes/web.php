@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\BankDetailController as AdminBankDetail;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
 use App\Http\Controllers\Admin\DepositController as AdminDeposit;
 use App\Http\Controllers\Admin\MemberController as AdminMember;
@@ -39,6 +40,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::put('/profile/password', [AdminProfile::class, 'updatePassword'])->name('profile.password');
     Route::get('/permissions', [AdminPermission::class, 'index'])->name('permissions.index');
     Route::post('/permissions', [AdminPermission::class, 'update'])->name('permissions.update');
+    Route::get('/bank-details', [AdminBankDetail::class, 'edit'])->name('bank-details.edit');
+    Route::put('/bank-details', [AdminBankDetail::class, 'update'])->name('bank-details.update');
     // Monthly payments
     Route::get('/monthly-payments', [AdminMonthlyPayment::class, 'index'])->name('monthly-payments.index');
     Route::post('/monthly-payments/generate', [AdminMonthlyPayment::class, 'generate'])->name('monthly-payments.generate');

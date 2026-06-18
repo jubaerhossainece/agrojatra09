@@ -78,6 +78,16 @@ class User extends Authenticatable
         return $this->hasPermission('delete_deposits');
     }
 
+    public function canManageBankDetails(): bool
+    {
+        return $this->hasPermission('manage_bank_details');
+    }
+
+    public function canRegenerateMonthlyPayments(): bool
+    {
+        return $this->hasPermission('regenerate_monthly_payments');
+    }
+
     public function positionLabel(): string
     {
         return match ($this->position) {

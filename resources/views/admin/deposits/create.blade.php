@@ -31,6 +31,10 @@
         </div>
     @endif
 
+    <div class="mb-4">
+        <x-bank-details-card />
+    </div>
+
     <form method="POST" action="{{ route('admin.deposits.store') }}" class="space-y-4"
           enctype="multipart/form-data" x-data="depositForm()" x-init="init()">
         @csrf

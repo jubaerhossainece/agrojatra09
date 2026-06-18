@@ -24,6 +24,8 @@
         </div>
     </div>
 
+    <x-bank-details-card />
+
     <form method="POST" action="{{ route('member.deposits.store') }}" enctype="multipart/form-data">
         @csrf
 

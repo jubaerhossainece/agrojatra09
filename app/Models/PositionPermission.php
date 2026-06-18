@@ -11,7 +11,9 @@ class PositionPermission extends Model
     const POSITIONS = ['president', 'secretary', 'accountant'];
 
     const PERMISSIONS = [
-        'approve_deposits' => 'Approve / Reject Deposits',
-        'delete_deposits'  => 'Delete Deposits',
+        'approve_deposits'             => 'Approve / Reject Deposits',
+        'delete_deposits'              => 'Delete Deposits',
+        'manage_bank_details'          => 'Manage Bank Details',
+        'regenerate_monthly_payments'  => 'Regenerate Monthly Payments',
     ];
 }

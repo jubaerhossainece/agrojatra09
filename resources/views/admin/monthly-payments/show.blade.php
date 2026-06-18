@@ -72,18 +72,44 @@
         <div class="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-lg">{{ session('error') }}</div>
     @endif
 
+    {{-- Status tabs --}}
+    @php
+        $tabs = [
+            null      => 'All',
+            'paid'    => 'Paid',
+            'partial' => 'Partial',
+            'unpaid'  => 'Unpaid',
+        ];
+    @endphp
+    <div class="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit">
+        @foreach($tabs as $val => $tabLabel)
+            <a href="{{ route('admin.monthly-payments.show', array_merge([$year, $month], $val ? ['status' => $val] : [])) }}"
+               class="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors
+                      {{ $status === $val ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">
+                {{ $tabLabel }}
+                @if($val && $statusCounts[$val] > 0)
+                    <span class="ml-1 text-xs text-gray-400">({{ $statusCounts[$val] }})</span>
+                @endif
+            </a>
+        @endforeach
+    </div>
+
     <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100">
             <h2 class="font-semibold text-gray-800">{{ $label }}</h2>
         </div>
 
-        @if($payments->isEmpty())
+        @if($payments->isEmpty() && array_sum($statusCounts) === 0)
             <div class="px-6 py-10 text-center text-gray-400 text-sm">
                 No payment records generated for this month yet.
                 <br>
                 <a href="{{ route('admin.monthly-payments.index') }}" class="text-green-600 hover:underline mt-2 inline-block">
                     Go generate them →
                 </a>
+            </div>
+        @elseif($payments->isEmpty())
+            <div class="px-6 py-10 text-center text-gray-400 text-sm">
+                No {{ strtolower($tabs[$status]) }} members for {{ $label }}.
             </div>
         @else
             <table class="w-full text-sm">

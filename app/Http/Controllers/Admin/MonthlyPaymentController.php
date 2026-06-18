@@ -46,9 +46,28 @@ class MonthlyPaymentController extends Controller
             ->get()
             ->sortBy(fn($p) => $p->member->full_name);
 
+        $statusCounts = [
+            'paid'    => $payments->filter(fn($p) => $p->is_paid)->count(),
+            'partial' => $payments->filter(fn($p) => !$p->is_paid && $p->total_allocated > 0)->count(),
+            'unpaid'  => $payments->filter(fn($p) => $p->total_allocated <= 0)->count(),
+        ];
+
+        $status = $request->query('status');
+        if (in_array($status, ['paid', 'partial', 'unpaid'])) {
+            $payments = $payments->filter(function ($p) use ($status) {
+                return match ($status) {
+                    'paid'    => $p->is_paid,
+                    'partial' => !$p->is_paid && $p->total_allocated > 0,
+                    'unpaid'  => $p->total_allocated <= 0,
+                };
+            });
+        } else {
+            $status = null;
+        }
+
         $label = Carbon::create($year, $month, 1)->format('F Y');
 
-        return view('admin.monthly-payments.show', compact('payments', 'label', 'year', 'month'));
+        return view('admin.monthly-payments.show', compact('payments', 'label', 'year', 'month', 'status', 'statusCounts'));
     }
 
     /**
