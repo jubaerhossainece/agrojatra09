@@ -31,7 +31,9 @@ class PermissionController extends Controller
         $permissionKeys = array_keys(PositionPermission::PERMISSIONS);
 
         DB::transaction(function () use ($request, $positions, $permissionKeys) {
-            PositionPermission::truncate();
+            // truncate() implicitly commits in MySQL, breaking this transaction's
+            // atomicity — use a regular delete() so a failure mid-loop rolls back cleanly.
+            PositionPermission::query()->delete();
 
             foreach ($positions as $position) {
                 foreach ($permissionKeys as $permission) {
