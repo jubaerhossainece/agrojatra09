@@ -40,6 +40,7 @@ class MonthlyPaymentController extends Controller
     public function show(Request $request, int $year, int $month)
     {
         $payments = MonthlyPayment::with(['member', 'allocations.deposit'])
+            ->whereHas('member', fn($q) => $q->where('status', 'active'))
             ->where('payment_year', $year)
             ->where('payment_month', $month)
             ->orderBy('member_id')

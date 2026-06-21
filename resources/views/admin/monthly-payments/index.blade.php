@@ -105,8 +105,22 @@
                         @foreach($months as $m)
                             @php $label = \Carbon\Carbon::create($year, $m, 1)->format('M'); @endphp
                             <th class="px-3 py-3 font-semibold text-gray-500 text-center whitespace-nowrap">
-                                <a href="{{ route('admin.monthly-payments.show', [$year, $m]) }}"
-                                   class="hover:text-green-700">{{ $label }}</a>
+                                <div class="flex items-center justify-center gap-1">
+                                    <a href="{{ route('admin.monthly-payments.show', [$year, $m]) }}"
+                                       class="text-green-700 underline decoration-green-300 underline-offset-2 hover:text-green-900 hover:decoration-green-600">{{ $label }}</a>
+                                    @if(auth()->user()->canRegenerateMonthlyPayments())
+                                        <form method="POST" action="{{ route('admin.monthly-payments.regenerate', [$year, $m]) }}">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" title="Regenerate {{ $label }} {{ $year }}"
+                                                    class="text-gray-300 hover:text-green-700 transition-colors">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
                             </th>
                         @endforeach
                         <th class="px-3 py-3 font-semibold text-gray-600 text-right">Paid</th>
@@ -120,7 +134,9 @@
                         @endphp
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-4 py-2 font-medium text-gray-800 sticky left-0 bg-white hover:bg-gray-50 z-10">
-                                {{ $member->full_name }}
+                                <a href="{{ route('admin.members.show', $member) }}" class="hover:text-green-700 hover:underline">
+                                    {{ $member->full_name }}
+                                </a>
                             </td>
                             @foreach($months as $m)
                                 @php $payment = $memberPayments->get($m); @endphp

@@ -149,7 +149,11 @@
                             $isPartial = !$isPaid && $allocated > 0;
                         @endphp
                         <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-4 py-3 font-medium text-gray-800">{{ $payment->member->full_name }}</td>
+                            <td class="px-4 py-3 font-medium text-gray-800">
+                                <a href="{{ route('admin.members.show', $payment->member) }}" class="hover:text-green-700 hover:underline">
+                                    {{ $payment->member->full_name }}
+                                </a>
+                            </td>
                             <td class="px-4 py-3 text-right text-gray-600">৳ {{ number_format($payment->expected_amount) }}</td>
                             <td class="px-4 py-3 text-right font-semibold text-green-700">৳ {{ number_format($allocated) }}</td>
                             <td class="px-4 py-3 text-right {{ $balance > 0 ? 'text-red-600' : 'text-gray-400' }}">
