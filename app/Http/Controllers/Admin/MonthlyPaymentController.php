@@ -126,6 +126,25 @@ class MonthlyPaymentController extends Controller
     }
 
     /**
+     * Repair tool: re-sync expected_amount on this month's records to the
+     * member's historically-correct share rate for that month, then re-run
+     * allocation. Does not touch any other month.
+     */
+    public function regenerate(int $year, int $month)
+    {
+        abort_if(!auth()->user()->canRegenerateMonthlyPayments(), 403, 'You do not have permission to regenerate monthly payments.');
+
+        $changed = $this->service->regenerateMonth($year, $month);
+
+        $label = Carbon::create($year, $month, 1)->format('F Y');
+        $msg   = $changed > 0
+            ? "Regenerated {$label}: {$changed} record(s) updated to reflect current share history."
+            : "Regenerated {$label}: all records already up to date — nothing to change.";
+
+        return back()->with('success', $msg);
+    }
+
+    /**
      * Delete all payment records for a month and reallocate deposits.
      */
     public function deleteMonth(int $year, int $month)

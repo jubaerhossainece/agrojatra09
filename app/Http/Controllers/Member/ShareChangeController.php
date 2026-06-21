@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
 use App\Models\ShareChangeRequest;
+use App\Services\MonthlyPaymentService;
 use Illuminate\Http\Request;
 
 class ShareChangeController extends Controller
 {
+    public function __construct(private MonthlyPaymentService $paymentService) {}
+
     public function approve(ShareChangeRequest $shareChangeRequest)
     {
         $member = auth()->user()->member;
@@ -16,14 +19,7 @@ class ShareChangeController extends Controller
             abort(403);
         }
 
-        // Update the first share record so the total equals the new count
-        $share = $member->shares()->first();
-        if ($share) {
-            $share->update([
-                'number_of_shares' => $shareChangeRequest->new_shares,
-                'total_amount'     => $shareChangeRequest->new_shares * 2000,
-            ]);
-        }
+        $this->paymentService->recordShareChange($member, $shareChangeRequest->new_shares, $shareChangeRequest);
 
         $shareChangeRequest->update([
             'status'      => 'approved',

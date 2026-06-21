@@ -32,6 +32,12 @@ class UserController extends Controller
             'password' => ['nullable', 'string', 'min:6'],
         ]);
 
+        abort_if(
+            $request->position !== $user->position && !auth()->user()->isPresident(),
+            403,
+            'Only the president can change a user\'s position.'
+        );
+
         $data = ['position' => $request->position];
 
         if ($request->filled('password')) {

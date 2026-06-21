@@ -10,7 +10,7 @@ class BankDetailController extends Controller
 {
     public function edit()
     {
-        abort_if(!auth()->user()->isAccountant(), 403, 'Only the accountant can manage bank details.');
+        abort_if(!auth()->user()->canManageBankDetails(), 403, 'You do not have permission to manage bank details.');
 
         $bankDetail = BankDetail::first();
 
@@ -19,7 +19,7 @@ class BankDetailController extends Controller
 
     public function update(Request $request)
     {
-        abort_if(!auth()->user()->isAccountant(), 403, 'Only the accountant can manage bank details.');
+        abort_if(!auth()->user()->canManageBankDetails(), 403, 'You do not have permission to manage bank details.');
 
         $data = $request->validate([
             'bank_name'      => 'required|string|max:255',

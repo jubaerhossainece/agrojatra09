@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Member;
 use App\Models\ShareChangeRequest;
+use App\Services\MonthlyPaymentService;
 use Illuminate\Http\Request;
 
 class ShareChangeController extends Controller
 {
+    public function __construct(private MonthlyPaymentService $paymentService) {}
+
     public function store(Request $request, Member $member)
     {
         $request->validate([
@@ -38,13 +41,7 @@ class ShareChangeController extends Controller
         abort_if($shareChangeRequest->requested_by === auth()->id(), 403, 'You cannot approve a request you initiated yourself.');
 
         $member = $shareChangeRequest->member;
-        $share  = $member->shares()->first();
-        if ($share) {
-            $share->update([
-                'number_of_shares' => $shareChangeRequest->new_shares,
-                'total_amount'     => $shareChangeRequest->new_shares * 2000,
-            ]);
-        }
+        $this->paymentService->recordShareChange($member, $shareChangeRequest->new_shares, $shareChangeRequest);
 
         $shareChangeRequest->update([
             'status'      => 'approved',

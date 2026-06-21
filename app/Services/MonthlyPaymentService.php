@@ -6,6 +6,8 @@ use App\Models\Deposit;
 use App\Models\DepositAllocation;
 use App\Models\Member;
 use App\Models\MonthlyPayment;
+use App\Models\ShareChangeRequest;
+use App\Models\ShareHistory;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -26,7 +28,8 @@ class MonthlyPaymentService
         $created  = 0;
 
         foreach ($members as $member) {
-            $expectedAmount = $member->total_amount; // shares × 2000
+            $history = ShareHistory::asOf($member->id, $year, $month);
+            $expectedAmount = $history?->total_amount ?? $member->total_amount; // shares × 2000, as of this month
             if ($expectedAmount <= 0) continue;
 
             $exists = MonthlyPayment::where('member_id', $member->id)
@@ -207,5 +210,102 @@ class MonthlyPaymentService
 
             $this->refreshLateFlags($member->id);
         });
+    }
+
+    /**
+     * Apply an approved share change: update the member's share count, record
+     * it in share_histories effective the current year/month, then instantly
+     * sync the current month's expected_amount (and any already-generated
+     * future months) — past months are never touched retroactively.
+     */
+    public function recordShareChange(Member $member, int $newShares, ?ShareChangeRequest $shareChangeRequest = null): void
+    {
+        DB::transaction(function () use ($member, $newShares, $shareChangeRequest) {
+            $share = $member->shares()->first();
+            if ($share) {
+                $share->update([
+                    'number_of_shares' => $newShares,
+                    'total_amount'     => $newShares * 2000,
+                ]);
+            }
+
+            $now = Carbon::now();
+
+            ShareHistory::create([
+                'member_id'               => $member->id,
+                'number_of_shares'        => $newShares,
+                'total_amount'            => $newShares * 2000,
+                'effective_year'          => $now->year,
+                'effective_month'         => $now->month,
+                'share_change_request_id' => $shareChangeRequest?->id,
+            ]);
+
+            $this->syncCurrentAndFuture($member);
+        });
+    }
+
+    /**
+     * Refresh expected_amount on a member's current-month and any already-
+     * generated future-month records to match share_histories. Past months
+     * are left untouched.
+     */
+    public function syncCurrentAndFuture(Member $member): void
+    {
+        $now = Carbon::now();
+
+        $payments = MonthlyPayment::where('member_id', $member->id)
+            ->where(function ($q) use ($now) {
+                $q->where('payment_year', '>', $now->year)
+                    ->orWhere(function ($q2) use ($now) {
+                        $q2->where('payment_year', $now->year)->where('payment_month', '>=', $now->month);
+                    });
+            })
+            ->get();
+
+        if ($payments->isEmpty()) {
+            return;
+        }
+
+        foreach ($payments as $payment) {
+            $history = ShareHistory::asOf($member->id, $payment->payment_year, $payment->payment_month);
+            if ($history && (float) $history->total_amount !== (float) $payment->expected_amount) {
+                $payment->update(['expected_amount' => $history->total_amount]);
+            }
+        }
+
+        $this->reallocateAll($member);
+    }
+
+    /**
+     * Repair tool: recompute expected_amount for every record in a given
+     * month from share_histories as of that record's own month — never the
+     * member's current rate. Safe to run on any month, any time. Returns the
+     * number of records whose expected_amount actually changed.
+     */
+    public function regenerateMonth(int $year, int $month): int
+    {
+        $payments = MonthlyPayment::where('payment_year', $year)
+            ->where('payment_month', $month)
+            ->get();
+
+        $changed = 0;
+        $affectedMembers = [];
+
+        foreach ($payments as $payment) {
+            $history = ShareHistory::asOf($payment->member_id, $year, $month);
+            if (!$history) continue;
+
+            if ((float) $history->total_amount !== (float) $payment->expected_amount) {
+                $payment->update(['expected_amount' => $history->total_amount]);
+                $changed++;
+                $affectedMembers[$payment->member_id] = true;
+            }
+        }
+
+        foreach (array_keys($affectedMembers) as $memberId) {
+            $this->reallocateAll(Member::find($memberId));
+        }
+
+        return $changed;
     }
 }
