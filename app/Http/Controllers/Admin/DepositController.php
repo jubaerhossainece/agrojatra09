@@ -69,7 +69,7 @@ class DepositController extends Controller
         }
 
         $data['recorded_by'] = auth()->id();
-        $data['status']      = 'approved';
+        $data['status']      = 'pending';
         $data['approved_by'] = auth()->id();
         $data['approved_at'] = now();
 
