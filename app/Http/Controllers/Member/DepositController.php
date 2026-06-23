@@ -37,8 +37,8 @@ class DepositController extends Controller
         $request->validate([
             'amount'         => ['required', 'numeric', 'min:1'],
             'deposit_date'   => ['required', 'date'],
-            'bank_name'      => ['nullable', 'string', 'max:255'],
-            'bank_reference' => ['nullable', 'string', 'max:255'],
+            'bank_name'      => ['required', 'string', 'max:255'],
+            'bank_reference' => ['required', 'string', 'max:255'],
             'receipt_number' => ['nullable', 'string', 'max:255'],
             'note'           => ['nullable', 'string'],
             'attachment'     => ['nullable', 'file', 'mimes:jpeg,jpg,png,pdf', 'max:5120'],
@@ -87,8 +87,8 @@ class DepositController extends Controller
         $request->validate([
             'amount'            => ['required', 'numeric', 'min:1'],
             'deposit_date'      => ['required', 'date'],
-            'bank_name'         => ['nullable', 'string', 'max:255'],
-            'bank_reference'    => ['nullable', 'string', 'max:255'],
+            'bank_name'         => ['required', 'string', 'max:255'],
+            'bank_reference'    => ['required', 'string', 'max:255'],
             'receipt_number'    => ['nullable', 'string', 'max:255'],
             'note'              => ['nullable', 'string'],
             'attachment'        => ['nullable', 'file', 'mimes:jpeg,jpg,png,pdf', 'max:5120'],

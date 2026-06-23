@@ -109,14 +109,16 @@
                            class="w-full border {{ $errors->has('deposit_date') ? 'border-red-400' : 'border-gray-300' }} rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Bank Name</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Bank Name <span class="text-red-500">*</span></label>
                     <input type="text" name="bank_name" value="{{ old('bank_name') }}"
-                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                           class="w-full border {{ $errors->has('bank_name') ? 'border-red-400' : 'border-gray-300' }} border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                           @error('bank_name')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Bank Reference / Transaction ID</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Bank Reference / Transaction ID <span class="text-red-500">*</span></label>
                     <input type="text" name="bank_reference" value="{{ old('bank_reference') }}"
-                           class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                           class="w-full border {{ $errors->has('bank_reference') ? 'border-red-400' : 'border-gray-300' }} border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 outline-none">
+                           @error('bank_reference')<p class="text-red-500 text-xs mt-1">{{ $message }}</p>@enderror
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Receipt Number</label>
